@@ -1,0 +1,11 @@
+# Deno
+deno.lock
+
+# Environment and config
+.env
+
+# Editor files
+.vscode/
+
+# Node.js
+node_modules/

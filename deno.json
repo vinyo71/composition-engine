@@ -1,0 +1,11 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts --allow-read --allow-write",
+    "gen_data": "py gen_data.py"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "fast-xml-parser": "npm:fast-xml-parser@^4.5.1",
+    "pdf-lib": "npm:pdf-lib@^1.17.1"
+  }
+}
