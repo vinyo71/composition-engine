@@ -9,3 +9,7 @@ deno.lock
 
 # Node.js
 node_modules/
+
+# input and outputs
+out/
+inp/

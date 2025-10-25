@@ -1,6 +1,7 @@
 import random
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
+import os
 
 # Expanded Hungarian names, cities, and streets
 hungarian_names = ["Nagy János", "Kovács Éva", "Tóth István", "Szabó Katalin", "Horváth Péter", 
@@ -89,7 +90,9 @@ def generate_xml_dataset(num_documents):
             currency_element = ET.SubElement(transaction_element, "Currency")
             currency_element.text = transaction["currency"]
 
-    file_name = f"bank_statements_{num_documents}.xml"
+    # ensure inp folder exists and write file there
+    os.makedirs("inp", exist_ok=True)
+    file_name = os.path.join("inp", f"bank_statements_{num_documents}.xml")
     tree = ET.ElementTree(root)
     tree.write(file_name, encoding="utf-8", xml_declaration=True)
     return file_name

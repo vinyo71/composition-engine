@@ -1,11 +1,16 @@
 {
   "tasks": {
-    "dev": "deno run --watch main.ts --allow-read --allow-write",
+    "compose": "deno run -A src/cli.ts",
+    "dev": "deno run -A --watch=src src/cli.ts",
+    "dev:nocheck": "deno run -A --no-check --watch=src src/cli.ts",
     "gen_data": "py gen_data.py"
   },
   "imports": {
-    "@std/assert": "jsr:@std/assert@1",
-    "fast-xml-parser": "npm:fast-xml-parser@^4.5.1",
-    "pdf-lib": "npm:pdf-lib@^1.17.1"
+    "@std/assert": "jsr:@std/assert@^1",
+    "@std/cli/parse-args": "jsr:@std/cli@^1/parse-args",
+    "@std/fs/ensure-dir": "jsr:@std/fs@^1/ensure-dir",
+    "@std/path": "jsr:@std/path@^1",
+    "fast-xml-parser": "npm:fast-xml-parser@latest",
+    "pdf-lib": "npm:pdf-lib@latest"
   }
 }

@@ -1,0 +1,9 @@
+<h1>Bank Statement</h1>
+<p><strong>Name:</strong> {{Name}}</p>
+<p><strong>Address:</strong> {{Address}}</p>
+<p><strong>Account:</strong> {{AccountNumber}}</p>
+
+<h2>Transactions</h2>
+{{#each Transactions.Transaction}}
+<p>{{Date}} — {{Description}} — {{Amount}} {{Currency}}</p>
+{{/each}}
