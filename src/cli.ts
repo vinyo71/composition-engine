@@ -3,9 +3,10 @@ import { ensureDir } from "jsr:@std/fs/ensure-dir";
 import { basename, extname, join } from "jsr:@std/path";
 import { parseXml, findRecords } from "./xml.ts";
 import { compileTemplate } from "./template.ts";
-import { createPdfDocument, renderRecordToPdf, savePdf } from "./pdf.ts";
+import { createPdfDocument, renderRecordToPdf, savePdf, createBrowser, closeBrowser, htmlToPdfBytes } from "./pdf.ts";
 
 type Mode = "multi" | "single";
+type Engine = "pdf-lib" | "browser";
 
 type Options = {
   input: string;
@@ -19,6 +20,8 @@ type Options = {
   limit?: number;
   font?: string; // optional path to a TTF/OTF that supports your locale
   streamTag?: string; // repeating element to stream from the XML (e.g., BankStatement)
+  engine: Engine;
+  chrome?: string; // optional path to Chrome/Chromium/Edge executable
 };
 
 function getDefaultOptions(): Options {
@@ -30,6 +33,7 @@ function getDefaultOptions(): Options {
     format: "pdf",
     mode: "multi",
     concurrency: Math.max(1, (globalThis as any).navigator?.hardwareConcurrency ?? 4),
+    engine: "pdf-lib",
   };
 }
 
@@ -45,8 +49,9 @@ function parseCli(): Options {
       r: "recordPath",
       c: "concurrency",
       l: "limit",
+      e: "engine",
     },
-    string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "font", "streamTag"],
+    string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "font", "streamTag", "engine", "chrome"],
     boolean: [],
   });
 
@@ -63,6 +68,8 @@ function parseCli(): Options {
     limit: args.limit ? Number(args.limit) : undefined,
     font: args.font ? String(args.font) : undefined,
     streamTag: args.streamTag ? String(args.streamTag) : undefined,
+    engine: (args.engine ?? defaults.engine) as Engine,
+    chrome: args.chrome ? String(args.chrome) : undefined,
   };
 
   if (opts.format !== "pdf") {
@@ -73,11 +80,25 @@ function parseCli(): Options {
     console.error(`Unsupported --mode=${opts.mode}. Use 'single' or 'multi'.`);
     Deno.exit(2);
   }
+  if (opts.engine !== "pdf-lib" && opts.engine !== "browser") {
+    console.error(`Unsupported --engine=${opts.engine}. Use 'pdf-lib' or 'browser'.`);
+    Deno.exit(2);
+  }
   if (!Number.isFinite(opts.concurrency) || opts.concurrency < 1) {
     console.error(`Invalid --concurrency value.`);
     Deno.exit(2);
   }
   return opts;
+}
+
+// Build a full HTML doc from body content, with basic print CSS
+function wrapHtmlDoc(body: string, extraCss = ""): string {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    @page { size: A4; margin: 20mm 15mm; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    .page-break { page-break-after: always; }
+    ${extraCss}
+  </style></head><body>${body}</body></html>`;
 }
 
 // Stream <tagName>...</tagName> blocks from a large XML file without loading it fully
@@ -149,11 +170,50 @@ async function main() {
     const tag = opts.streamTag;
     let processed = 0;
 
+    // Browser engine streaming (multi only)
+    if (opts.engine === "browser") {
+      if (opts.mode === "single") {
+        console.error("Streaming + --engine=browser with --mode=single is not supported. Use --mode=multi or remove --streamTag.");
+        Deno.exit(2);
+      }
+      const browser = await createBrowser(opts.chrome);
+      try {
+        const batch: Promise<void>[] = [];
+        let index = 0;
+        for await (const xmlChunk of streamXmlElements(opts.input, tag)) {
+          const currentIndex = index++;
+          const task = (async () => {
+            const node = parseXml(xmlChunk);
+            const rec = node?.[tag] ?? node;
+            const htmlFrag = render(rec);
+            const full = wrapHtmlDoc(htmlFrag);
+            const bytes = await htmlToPdfBytes(browser, full);
+            const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
+            const outPath = join(opts.outDir, fileName);
+            await Deno.writeFile(outPath, bytes);
+          })();
+          batch.push(task);
+          if (batch.length >= opts.concurrency) {
+            await Promise.all(batch);
+            batch.length = 0;
+            console.log(`Processed ${currentIndex + 1}`);
+          }
+          if (opts.limit && index >= opts.limit) break;
+        }
+        if (batch.length) await Promise.all(batch);
+        console.log(`Done. Wrote ${Math.min(index, opts.limit ?? index)} PDFs to ${opts.outDir}`);
+        return;
+      } finally {
+        await closeBrowser(browser);
+      }
+    }
+
+    // pdf-lib engine streaming (supports single and multi)
     if (opts.mode === "single") {
       const doc = await createPdfDocument(opts.font);
       for await (const xmlChunk of streamXmlElements(opts.input, tag)) {
         const node = parseXml(xmlChunk);
-        const rec = node?.[tag] ?? node; // unwrap if parser wraps by tag
+        const rec = node?.[tag] ?? node;
         const html = render(rec);
         await renderRecordToPdf(doc, html);
         processed++;
@@ -167,7 +227,6 @@ async function main() {
       return;
     }
 
-    // mode=multi: batch by concurrency
     const batch: Promise<void>[] = [];
     let index = 0;
     for await (const xmlChunk of streamXmlElements(opts.input, tag)) {
@@ -206,6 +265,59 @@ async function main() {
 
   console.log(`Records: ${records.length}${opts.limit ? ` (processing ${total})` : ""}`);
 
+  // Browser engine (HTML+CSS)
+  if (opts.engine === "browser") {
+    if (opts.mode === "single") {
+      const parts: string[] = [];
+      for (let i = 0; i < total; i++) {
+        const rec = records[i];
+        parts.push(render(rec));
+        if (i < total - 1) parts.push('<div class="page-break"></div>');
+      }
+      const full = wrapHtmlDoc(parts.join("\n"));
+      const browser = await createBrowser(opts.chrome);
+      try {
+        const bytes = await htmlToPdfBytes(browser, full);
+        const base = basename(opts.input, extname(opts.input));
+        const outPath = join(opts.outDir, `${base}.pdf`);
+        await Deno.writeFile(outPath, bytes);
+        console.log(`Wrote single PDF: ${outPath}`);
+      } finally {
+        await closeBrowser(browser);
+      }
+      return;
+    }
+
+    // mode=multi with browser: concurrent pages
+    const browser = await createBrowser(opts.chrome);
+    try {
+      let nextIndex = 0;
+      let processed = 0;
+      async function worker(id: number) {
+        while (true) {
+          const i = nextIndex++;
+          if (i >= total) break;
+          const rec = records[i];
+          const htmlFrag = render(rec);
+          const full = wrapHtmlDoc(htmlFrag);
+          const bytes = await htmlToPdfBytes(browser, full);
+          const fileName = applyOutNamePattern(opts.outName, i, rec);
+          const outPath = join(opts.outDir, fileName);
+          await Deno.writeFile(outPath, bytes);
+          processed++;
+          if ((processed % 100) === 0) console.log(`Worker ${id}: processed ${processed}/${total}`);
+        }
+      }
+      const workers = Array.from({ length: opts.concurrency }, (_, id) => worker(id));
+      await Promise.all(workers);
+      console.log(`Done. Wrote ${processed} PDFs to ${opts.outDir}`);
+      return;
+    } finally {
+      await closeBrowser(browser);
+    }
+  }
+
+  // pdf-lib engine (existing behavior)
   if (opts.mode === "single") {
     // Single combined PDF
     const doc = await createPdfDocument(opts.font);
@@ -228,7 +340,6 @@ async function main() {
   const concurrency = opts.concurrency;
   let nextIndex = 0;
   let processed = 0;
-
   async function worker(id: number) {
     while (true) {
       const i = nextIndex++;
@@ -246,10 +357,8 @@ async function main() {
       }
     }
   }
-
   const workers = Array.from({ length: concurrency }, (_, id) => worker(id));
   await Promise.all(workers);
-
   console.log(`Done. Wrote ${processed} PDFs to ${opts.outDir}`);
 }
 

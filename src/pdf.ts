@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, PDFFont } from "pdf-lib";
+import puppeteer from "puppeteer";
 
 export const A4 = { width: 595.28, height: 841.89 }; // points
 
@@ -98,6 +99,77 @@ function wrapText(text: string, maxWidth: number, fontSize: number, font: PDFFon
     if (line) out.push(line);
   }
   return out;
+}
+
+// Chromium (Puppeteer) HTML+CSS rendering helpers
+export type PuppeteerBrowser = any;
+
+async function exists(p: string): Promise<boolean> {
+  try { await Deno.stat(p); return true; } catch { return false; }
+}
+
+async function findChromeExecutable(): Promise<string | undefined> {
+  const envPath = Deno.env.get("PUPPETEER_EXECUTABLE_PATH");
+  if (envPath && await exists(envPath)) return envPath;
+
+  if (Deno.build.os === "windows") {
+    const candidates = [
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+      `${Deno.env.get("LOCALAPPDATA") ?? "C:\\Users\\%USERNAME%\\AppData\\Local"}\\Google\\Chrome\\Application\\chrome.exe`,
+      "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+      "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    ];
+    for (const p of candidates) if (await exists(p)) return p;
+  } else if (Deno.build.os === "darwin") {
+    const candidates = [
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+      `${Deno.env.get("HOME") ?? ""}/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`,
+    ];
+    for (const p of candidates) if (await exists(p)) return p;
+  } else {
+    const candidates = [
+      "/usr/bin/google-chrome",
+      "/usr/bin/google-chrome-stable",
+      "/usr/bin/chromium",
+      "/usr/bin/chromium-browser",
+      "/snap/bin/chromium",
+    ];
+    for (const p of candidates) if (await exists(p)) return p;
+  }
+  return undefined;
+}
+
+export async function createBrowser(executablePath?: string): Promise<PuppeteerBrowser> {
+  const exe = executablePath || await findChromeExecutable();
+  const browser = await puppeteer.launch(
+    exe ? { headless: "new" as any, executablePath: exe } : { headless: "new" as any },
+  );
+  return browser;
+}
+
+export async function closeBrowser(browser: PuppeteerBrowser) {
+  try {
+    await browser?.close();
+  } catch {
+    // ignore
+  }
+}
+
+export async function htmlToPdfBytes(browser: PuppeteerBrowser, fullHtml: string): Promise<Uint8Array> {
+  const page = await browser.newPage();
+  try {
+    await page.setContent(fullHtml, { waitUntil: "networkidle0" });
+    const buf = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "20mm", right: "15mm", bottom: "20mm", left: "15mm" },
+    });
+    return buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  } finally {
+    await page.close();
+  }
 }
 
 export async function renderRecordToPdf(doc: PDFDocument, htmlOrText: string) {

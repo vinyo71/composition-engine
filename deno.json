@@ -11,6 +11,7 @@
     "@std/fs/ensure-dir": "jsr:@std/fs@^1/ensure-dir",
     "@std/path": "jsr:@std/path@^1",
     "fast-xml-parser": "npm:fast-xml-parser@latest",
-    "pdf-lib": "npm:pdf-lib@latest"
+    "pdf-lib": "npm:pdf-lib@latest",
+    "puppeteer": "npm:puppeteer@latest"
   }
 }
