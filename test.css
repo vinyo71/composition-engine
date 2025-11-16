@@ -1,0 +1,39 @@
+/* 
+  Loud and obvious styles for debugging CSS injection.
+  If you see these styles, the --css flag is working.
+*/
+
+body {
+    background-color: #ff0000 !important; /* Bright red background */
+    border: 20px dashed #00ff00 !important; /* Thick, dashed green border */
+}
+
+.statement-container {
+    border: 10px solid #0000ff !important; /* Thick, solid blue border */
+    box-shadow: none !important;
+    background-color: #ffff00 !important; /* Bright yellow background */
+}
+
+.header .bank-name {
+    font-size: 80pt !important; /* Huge font */
+    color: #ff00ff !important; /* Bright magenta color */
+    -webkit-transform: rotate(-15deg); /* Rotate the text */
+    transform: rotate(-15deg);
+}
+
+.transactions-table th {
+    background-color: #000 !important; /* Black header */
+    color: #fff !important; /* White text */
+}
+
+.transactions-table td {
+    font-size: 20pt !important; /* Large font for data */
+    font-family: "Comic Sans MS", cursive, sans-serif !important; /* Comic Sans for maximum effect */
+}
+
+/* Add a new, very obvious highlight class */
+.debug-highlight {
+    background-color: #00ffff !important; /* Cyan background */
+    padding: 10px;
+    border: 5px dotted #ff00ff !important; /* Dotted magenta border */
+}

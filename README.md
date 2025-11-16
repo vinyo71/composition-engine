@@ -1,10 +1,9 @@
 # composition-engine
 
 Summary
-- Parses XML, extracts records, and produces PDFs at scale.
-- Two rendering engines:
-  - pdf-lib: high-throughput text layout (default)
-  - browser: full HTML+CSS layout via headless Chromium (Puppeteer)
+- Parses XML, extracts records, and produces high-fidelity PDFs from HTML templates at scale.
+- Default rendering engine uses a headless browser (Puppeteer) for full HTML+CSS support.
+- A legacy text-only engine (`pdf-lib`) is available but deprecated.
 
 Features
 - Record detection from XML (auto or via --recordPath).
@@ -13,9 +12,10 @@ Features
   - single: one combined PDF
 - Concurrency control with --concurrency.
 - Output naming pattern supports {index} and {id}.
-- Unicode support via user-supplied TTF/OTF font (--font) for pdf-lib.
+- Unicode support via user-supplied TTF/OTF font (--font) for the deprecated pdf-lib engine.
 - Streaming mode for very large XMLs via --streamTag (no full-file load).
-- Full HTML+CSS layout with --engine=browser.
+- Full HTML+CSS layout is the default.
+- External CSS styling with the --css flag.
 
 User Docs
 
@@ -29,7 +29,8 @@ deno task gen_data
 ```
 - The generated XML will be saved under `./inp/` (e.g., `./inp/bank_statements_1000.xml`).
 
-Quick start (pdf-lib, default)
+Quick start
+- You need a local Chrome/Chromium/Edge executable or set PUPPETEER_EXECUTABLE_PATH.
 - Multi-PDF (one file per record), auto-detect records (PowerShell):
 ```
 deno task compose --input .\inp\bank_statements_1000.xml --template .\templates\statement.html --outDir .\out --mode multi --concurrency 8
@@ -38,46 +39,43 @@ deno task compose --input .\inp\bank_statements_1000.xml --template .\templates\
 ```
 deno task compose --input .\inp\bank_statements_1000.xml --template .\templates\statement.html --outDir .\out --mode single
 ```
-
-HTML+CSS layout (Chromium)
-- You need a local Chrome/Chromium/Edge executable or set PUPPETEER_EXECUTABLE_PATH.
 - Recommended: pass the executable via --chrome.
   - Windows (Chrome):
     ```
-    deno task compose --engine browser --chrome "C:\Program Files\Google\Chrome\Application\chrome.exe" --input .\inp\bank_statements_1000.xml --template .\templates\statement.html --outDir .\out --mode single
+    deno task compose --chrome "C:\Program Files\Google\Chrome\Application\chrome.exe" --input .\inp\bank_statements_1000.xml --template .\templates\statement.html --outDir .\out --mode single
     ```
   - Windows (Edge):
     ```
-    deno task compose --engine browser --chrome "C:\Program Files\Microsoft\Edge\Application\msedge.exe" --input .\inp\bank_statements_1000.xml --template .\templates\statement.html --outDir .\out --mode multi
+    deno task compose --chrome "C:\Program Files\Microsoft\Edge\Application\msedge.exe" --input .\inp\bank_statements_1000.xml --template .\templates\statement.html --outDir .\out --mode multi
     ```
   - Linux:
     ```
-    deno task compose --engine browser --chrome /usr/bin/google-chrome --input ./inp/bank_statements_1000.xml --template ./templates/statement.html --outDir ./out --mode multi
+    deno task compose --chrome /usr/bin/google-chrome --input ./inp/bank_statements_1000.xml --template ./templates/statement.html --outDir ./out --mode multi
     ```
   - macOS:
     ```
-    deno task compose --engine browser --chrome "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --input ./inp/bank_statements_1000.xml --template ./templates/statement.html --outDir ./out --mode single
+    deno task compose --chrome "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --input ./inp/bank_statements_1000.xml --template ./templates/statement.html --outDir ./out --mode single
     ```
 - Alternatively set env var:
   - PowerShell:
     ```
     $env:PUPPETEER_EXECUTABLE_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"
-    deno task compose --engine browser ...
+    deno task compose ...
     ```
   - Bash:
     ```
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome deno task compose --engine browser ...
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome deno task compose ...
     ```
 
 Large XMLs (streaming)
 - Process huge files without loading them fully:
-  - Multi (pdf-lib):
+  - Multi (browser, default):
     ```
-    deno task compose --input .\inp\bank_statements_1000000.xml --template .\templates\statement.html --outDir .\out --mode multi --concurrency 8 --streamTag BankStatement
+    deno task compose --input .\inp\bank_statements_1000000.xml --template .\templates\statement.html --outDir .\out --mode multi --concurrency 4 --streamTag BankStatement
     ```
-  - Multi (browser):
+  - Multi (pdf-lib, deprecated):
     ```
-    deno task compose --engine browser --input .\inp\bank_statements_1000000.xml --template .\templates\statement.html --outDir .\out --mode multi --concurrency 4 --streamTag BankStatement
+    deno task compose --engine pdf-lib --input .\inp\bank_statements_1000000.xml --template .\templates\statement.html --outDir .\out --mode multi --concurrency 8 --streamTag BankStatement
     ```
   - Single (pdf-lib only; browser single + streaming is not supported)
 
@@ -111,21 +109,26 @@ CLI options
 - --recordPath <path>: explicit path to record array (dot-notation)
 - --concurrency <n>: workers for multi mode (default: CPU cores)
 - --limit <n>: process only first N records
-- --font <path>: TTF/OTF font path for Unicode text (pdf-lib engine)
-- --engine <pdf-lib|browser>: choose rendering engine
+- --font <path>: TTF/OTF font path for Unicode text (deprecated pdf-lib engine)
+- --engine <browser|pdf-lib>: choose rendering engine (default: browser)
 - --streamTag <tag>: stream repeating elements by tag (e.g., BankStatement) to avoid full-file loads
+- --css <file>: inject external CSS file for browser engine
 
 Fonts and Unicode
-- pdf-lib engine: provide a Unicode TTF/OTF via --font for non-ASCII (e.g., Hungarian “ő/ű”).
-- browser engine: uses system fonts via Chromium; typically no extra font config needed.
+- The default `browser` engine uses system fonts via Chromium; typically no extra font config is needed.
+- The deprecated `pdf-lib` engine requires a Unicode TTF/OTF via --font for non-ASCII (e.g., Hungarian “ő/ű”).
 
 Trade-offs
-- pdf-lib engine: fastest, simplest layout (text-only).
-- browser engine: full HTML/CSS fidelity, slower and heavier (Chromium startup and rendering).
+- `browser` engine (default): full HTML/CSS fidelity, slower and heavier (Chromium startup and rendering).
+- `pdf-lib` engine (deprecated): fastest, simplest layout (text-only).
 
 Troubleshooting
-- failed to allocate string; buffer exceeds maximum length:
+- **failed to find chrome executable**:
+  - Make sure you have Google Chrome, Chromium, or MS Edge installed.
+  - If installed in a non-standard location, provide the path via `--chrome <path/to/exe>`
+  - Alternatively, set the `PUPPETEER_EXECUTABLE_PATH` environment variable.
+- **failed to allocate string; buffer exceeds maximum length**:
   - Use --streamTag to enable streaming.
   - Prefer --mode multi for massive datasets.
-- WinAnsi cannot encode "...":
-  - Use --font with pdf-lib engine, or switch to --engine browser for full Unicode with system fonts.
+- **WinAnsi cannot encode "..."**:
+  - This is a `pdf-lib` engine error. Use `--font` with the deprecated engine, or switch to the default `--engine browser` for full Unicode with system fonts.

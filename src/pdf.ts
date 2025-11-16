@@ -157,10 +157,13 @@ export async function closeBrowser(browser: PuppeteerBrowser) {
   }
 }
 
-export async function htmlToPdfBytes(browser: PuppeteerBrowser, fullHtml: string): Promise<Uint8Array> {
+export async function htmlToPdfBytes(browser: PuppeteerBrowser, fullHtml: string, cssContent = ""): Promise<Uint8Array> {
   const page = await browser.newPage();
   try {
     await page.setContent(fullHtml, { waitUntil: "networkidle0" });
+    if (cssContent) {
+      await page.addStyleTag({ content: cssContent });
+    }
     const buf = await page.pdf({
       format: "A4",
       printBackground: true,

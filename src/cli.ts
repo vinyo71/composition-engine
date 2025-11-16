@@ -22,6 +22,7 @@ type Options = {
   streamTag?: string; // repeating element to stream from the XML (e.g., BankStatement)
   engine: Engine;
   chrome?: string; // optional path to Chrome/Chromium/Edge executable
+  css?: string; // optional path to a CSS file to inject into the HTML
 };
 
 function getDefaultOptions(): Options {
@@ -33,7 +34,7 @@ function getDefaultOptions(): Options {
     format: "pdf",
     mode: "multi",
     concurrency: Math.max(1, (globalThis as any).navigator?.hardwareConcurrency ?? 4),
-    engine: "pdf-lib",
+    engine: "browser",
   };
 }
 
@@ -51,7 +52,7 @@ function parseCli(): Options {
       l: "limit",
       e: "engine",
     },
-    string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "font", "streamTag", "engine", "chrome"],
+    string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "font", "streamTag", "engine", "chrome", "css"],
     boolean: [],
   });
 
@@ -70,6 +71,7 @@ function parseCli(): Options {
     streamTag: args.streamTag ? String(args.streamTag) : undefined,
     engine: (args.engine ?? defaults.engine) as Engine,
     chrome: args.chrome ? String(args.chrome) : undefined,
+    css: args.css ? String(args.css) : undefined,
   };
 
   if (opts.format !== "pdf") {
@@ -83,6 +85,9 @@ function parseCli(): Options {
   if (opts.engine !== "pdf-lib" && opts.engine !== "browser") {
     console.error(`Unsupported --engine=${opts.engine}. Use 'pdf-lib' or 'browser'.`);
     Deno.exit(2);
+  }
+  if (opts.engine === "pdf-lib") {
+    console.warn("Warning: --engine=pdf-lib is deprecated and will be removed in a future version. The default is now 'browser'.");
   }
   if (!Number.isFinite(opts.concurrency) || opts.concurrency < 1) {
     console.error(`Invalid --concurrency value.`);
@@ -161,6 +166,11 @@ async function main() {
   const opts = parseCli();
   await ensureDir(opts.outDir);
 
+  let cssContent = "";
+  if (opts.css) {
+    cssContent = await Deno.readTextFile(opts.css);
+  }
+
   // Load template only (avoid loading huge XML into memory)
   const templateText = await Deno.readTextFile(opts.template);
   const render = compileTemplate(templateText);
@@ -187,7 +197,7 @@ async function main() {
             const rec = node?.[tag] ?? node;
             const htmlFrag = render(rec);
             const full = wrapHtmlDoc(htmlFrag);
-            const bytes = await htmlToPdfBytes(browser, full);
+            const bytes = await htmlToPdfBytes(browser, full, cssContent);
             const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
             const outPath = join(opts.outDir, fileName);
             await Deno.writeFile(outPath, bytes);
@@ -277,7 +287,7 @@ async function main() {
       const full = wrapHtmlDoc(parts.join("\n"));
       const browser = await createBrowser(opts.chrome);
       try {
-        const bytes = await htmlToPdfBytes(browser, full);
+        const bytes = await htmlToPdfBytes(browser, full, cssContent);
         const base = basename(opts.input, extname(opts.input));
         const outPath = join(opts.outDir, `${base}.pdf`);
         await Deno.writeFile(outPath, bytes);
@@ -300,7 +310,7 @@ async function main() {
           const rec = records[i];
           const htmlFrag = render(rec);
           const full = wrapHtmlDoc(htmlFrag);
-          const bytes = await htmlToPdfBytes(browser, full);
+          const bytes = await htmlToPdfBytes(browser, full, cssContent);
           const fileName = applyOutNamePattern(opts.outName, i, rec);
           const outPath = join(opts.outDir, fileName);
           await Deno.writeFile(outPath, bytes);

@@ -1,9 +1,124 @@
-<h1>Bank Statement</h1>
-<p><strong>Name:</strong> {{Name}}</p>
-<p><strong>Address:</strong> {{Address}}</p>
-<p><strong>Account:</strong> {{AccountNumber}}</p>
-
-<h2>Transactions</h2>
-{{#each Transactions.Transaction}}
-<p>{{Date}} — {{Description}} — {{Amount}} {{Currency}}</p>
-{{/each}}
+<style>
+    body {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 10pt;
+        color: #333;
+        line-height: 1.6;
+        background-color: #f9f9f9;
+    }
+    .statement-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 30px;
+        border: 1px solid #ddd;
+        box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        background-color: #fff;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #0056b3;
+    }
+    .header .bank-name {
+        font-size: 28pt;
+        font-weight: bold;
+        color: #0056b3;
+    }
+    .header .statement-title {
+        font-size: 16pt;
+        color: #555;
+        text-align: right;
+    }
+    .customer-info {
+        margin-bottom: 30px;
+        padding: 15px;
+        background-color: #f2f6fa;
+        border-radius: 5px;
+    }
+    .customer-info h2 {
+        font-size: 14pt;
+        color: #0056b3;
+        margin-top: 0;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+    }
+    .customer-info p {
+        margin: 0;
+        line-height: 1.8;
+    }
+    .transactions-section h2 {
+        font-size: 14pt;
+        color: #0056b3;
+        margin-top: 0;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+    }
+    .transactions-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .transactions-table th, .transactions-table td {
+        border-bottom: 1px solid #ddd;
+        padding: 12px 10px;
+        text-align: left;
+    }
+    .transactions-table th {
+        background-color: #f2f6fa;
+        font-weight: bold;
+        color: #333;
+    }
+    .transactions-table .currency, .transactions-table .amount {
+        text-align: right;
+    }
+    .footer {
+        margin-top: 30px;
+        padding-top: 15px;
+        border-top: 1px solid #ccc;
+        font-size: 9pt;
+        color: #777;
+        text-align: center;
+    }
+</style>
+<div class="statement-container">
+    <div class="header">
+        <div class="bank-name">Your Bank</div>
+        <div class="statement-title">Account Statement</div>
+    </div>
+    <div class="customer-info">
+        <h2>Customer Details</h2>
+        <p><strong>Name:</strong> {{Name}}</p>
+        <p><strong>Address:</strong> {{Address}}</p>
+        <p><strong>Account Number:</strong> {{AccountNumber}}</p>
+    </div>
+    <div class="transactions-section">
+        <h2>Transactions</h2>
+        <table class="transactions-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th class="currency">Currency</th>
+                    <th class="amount">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each Transactions.Transaction}}
+                <tr>
+                    <td>{{Date}}</td>
+                    <td>{{Description}}</td>
+                    <td class="currency">{{Currency}}</td>
+                    <td class="amount">{{Amount}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    <div class="footer">
+        <p>Thank you for banking with us.</p>
+    </div>
+</div>

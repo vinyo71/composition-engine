@@ -15,11 +15,8 @@ Now (high impact)
   - [ ] Support XML namespaces in streamTag detection
 - [ ] CLI/UX
   - [ ] --chrome auto-detect messaging: add actionable hints if not found
-  - [ ] --css <file> to inject external styles for browser engine
+  - [x] --css <file> to inject external styles for browser engine
   - [ ] --locale, --dateFormat, --currency to format values in templates
-- [ ] Fonts (pdf-lib)
-  - [ ] Font cache across documents to avoid re-embedding the same TTF each time
-  - [ ] Option to embed multiple fonts and choose via {{font "Name"}} helper (or CSS-like)
 
 Next
 - [ ] Template engine
@@ -49,13 +46,12 @@ Later
 - [ ] Image/assets bundling for browser engine (local asset base path)
 - [ ] Sandbox for untrusted templates
 - [ ] CSV/JSON input support in addition to XML
-- [ ] HTML-to-text improvements for pdf-lib (tables, simple indentation)
 - [ ] Windows-specific path normalization improvements in CLI
 
 Quality
 - [ ] Tests
-  - [ ] Unit tests: xml.ts, template.ts, wrapText and font fallback logic
-  - [ ] Integration: render small dataset (pdf-lib + browser) and golden-compare page count
+  - [ ] Unit tests: xml.ts, template.ts
+  - [ ] Integration: render small dataset and golden-compare page count
   - [ ] Streaming tests with synthetic large XML
 - [ ] CI
   - [ ] GitHub Actions: deno fmt, lint, check, test; cache npm/jsr
