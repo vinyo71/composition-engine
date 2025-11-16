@@ -6,6 +6,7 @@ Status legend
 - [x] Done
 
 Now (high impact)
+- [ ] Refractor project
 - [ ] Browser engine
   - [ ] Add header/footer support (per page) with placeholders (page X of Y, date)
   - [ ] Page-break controls via CSS classes and template hooks
@@ -30,11 +31,11 @@ Next
   - [ ] Per-record error isolation (skip and continue, write a .err log)
   - [ ] Retry policy for browser render failures (transient crashes)
 - [ ] Logging/metrics
-  - [ ] --logLevel (info|warn|debug), structured logs
-  - [ ] Timing summary: parse, render, write; throughput metrics
+  - [x] --logLevel (info|warn|debug), structured logs
+  - [x] Timing summary: parse, render, write; throughput metrics
 - [ ] Performance
   - [ ] Batch size tuning in streaming multi mode
-  - [ ] Memory guardrails for single mode with huge datasets (auto-switch or warn)
+  - [x] Memory guardrails for single mode with huge datasets (auto-switch or warn)
 - [ ] Output
   - [ ] Zip output option (--zip) for multi PDFs
   - [ ] Deterministic file naming options: --pad <digits>, --prefix/--suffix

@@ -128,7 +128,8 @@ async function findChromeExecutable(): Promise<string | undefined> {
       `${Deno.env.get("HOME") ?? ""}/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`,
     ];
     for (const p of candidates) if (await exists(p)) return p;
-  } else {
+  }
+  else {
     const candidates = [
       "/usr/bin/google-chrome",
       "/usr/bin/google-chrome-stable",
@@ -160,7 +161,7 @@ export async function closeBrowser(browser: PuppeteerBrowser) {
 export async function htmlToPdfBytes(browser: PuppeteerBrowser, fullHtml: string, cssContent = ""): Promise<Uint8Array> {
   const page = await browser.newPage();
   try {
-    await page.setContent(fullHtml, { waitUntil: "networkidle0" });
+    await page.setContent(fullHtml, { waitUntil: "networkidle0", timeout: 120000 });
     if (cssContent) {
       await page.addStyleTag({ content: cssContent });
     }
@@ -168,6 +169,7 @@ export async function htmlToPdfBytes(browser: PuppeteerBrowser, fullHtml: string
       format: "A4",
       printBackground: true,
       margin: { top: "20mm", right: "15mm", bottom: "20mm", left: "15mm" },
+      timeout: 120000,
     });
     return buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   } finally {

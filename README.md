@@ -113,6 +113,7 @@ CLI options
 - --engine <browser|pdf-lib>: choose rendering engine (default: browser)
 - --streamTag <tag>: stream repeating elements by tag (e.g., BankStatement) to avoid full-file loads
 - --css <file>: inject external CSS file for browser engine
+- --logLevel <quiet|info|debug>: Controls the verbosity of console output (default: info)
 
 Fonts and Unicode
 - The default `browser` engine uses system fonts via Chromium; typically no extra font config is needed.
@@ -121,6 +122,15 @@ Fonts and Unicode
 Trade-offs
 - `browser` engine (default): full HTML/CSS fidelity, slower and heavier (Chromium startup and rendering).
 - `pdf-lib` engine (deprecated): fastest, simplest layout (text-only).
+
+Performance and Logging
+- **Timing Summary**: At the end of execution, a detailed timing summary is displayed (unless `--logLevel quiet` is used), breaking down time spent in setup, XML loading, XML parsing, and PDF processing. Throughput metrics (records per second) are also provided.
+- **Memory Guardrail**: When using `--mode single` with a large number of records, a warning will be issued, advising to switch to `--mode multi` or `--streamTag` to reduce memory consumption.
+- **Puppeteer Timeout**: The internal timeout for Puppeteer operations has been increased to better handle large single-PDF generation tasks.
+- **--logLevel <quiet|info|debug>**: Controls the verbosity of console output.
+  - `quiet`: Suppresses most informational messages, including the timing summary.
+  - `info` (default): Shows progress updates and the timing summary.
+  - `debug`: Shows detailed debugging information.
 
 Troubleshooting
 - **failed to find chrome executable**:
