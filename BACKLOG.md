@@ -9,6 +9,9 @@ Now (high impact)
 - [x] Refactor project
   - [x] Extract streaming logic and worker pool from `cli.ts` into dedicated classes
   - [x] Strengthen types for parsed XML records (reduce `any` usage)
+- [x] Remove Python dependency
+  - [x] Rewrite `gen_data.py` in Deno/TypeScript (`src/gen_data.ts`)
+  - [x] Update `deno.json` task to run the new script
 - [ ] Browser engine
   - [ ] Add header/footer support (per page) with placeholders (page X of Y, date)
   - [ ] Page-break controls via CSS classes and template hooks

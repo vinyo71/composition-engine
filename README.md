@@ -16,7 +16,6 @@ The Composition Engine bridges the gap between raw data (XML) and professional d
 ## Requirements
 
 *   **Deno**: [Install Deno](https://deno.land/#installation)
-*   **Python**: Required only for generating sample data (`deno task gen_data`).
 *   **Chrome/Edge**: A local installation of Google Chrome, Chromium, or Microsoft Edge.
 
 ## Quick Start
