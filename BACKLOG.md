@@ -10,17 +10,17 @@
 - [x] **Error Isolation**: Ensure a single failed record does not crash the entire batch.
 
 ### Template Engine (Handlebars)
-- [ ] **Implement Handlebars**: Replace basic string replacement with `npm:handlebars`.
-- [ ] **Logic & Control Flow**: Support `{{#if}}`, `{{#each}}`, `{{#unless}}`.
-- [ ] **Formatting Helpers**:
-  - [ ] `{{formatDate value pattern}}`
-  - [ ] `{{formatCurrency value currency locale}}`
-  - [ ] `{{formatNumber value decimals}}`
+- [x] **Implement Handlebars**: Replace basic string replacement with `npm:handlebars`.
+- [x] **Logic & Control Flow**: Support `{{#if}}`, `{{#each}}`, `{{#unless}}`.
+- [x] **Formatting Helpers**:
+  - [x] `{{formatDate value pattern}}`
+  - [x] `{{formatCurrency value currency locale}}`
+  - [x] `{{formatNumber value decimals}}`
 
 ### Advanced Layout & Visuals
-- [ ] **Header/Footer & Pagination**:
-  - [ ] Implement standard header/footer injection for Browser engine.
-  - [ ] Support "Page X of Y" placeholders.
+- [x] **Header/Footer & Pagination**:
+  - [x] Implement standard header/footer injection for Browser engine.
+  - [x] Support "Page X of Y" placeholders.
 - [ ] **Dynamic Charts**:
   - [ ] Integrate a charting library (e.g., Chart.js or QuickChart) to render graphs in the PDF (e.g., "Spending Breakdown").
 - [ ] **Asset Management**:
@@ -54,6 +54,10 @@
 - [ ] **Multi-Channel Output**:
   - [ ] Generate HTML emails alongside PDFs (Omnichannel).
   - [ ] Responsive templates that adapt to device size (Digital First).
+- [ ] **Multi-Language Support**:
+  - [ ] Internationalization (i18n) helpers (e.g., `{{t "invoice_date"}}`).
+  - [ ] Load translation files (JSON/YAML) dynamically.
+  - [ ] Support RTL languages (Arabic, Hebrew).
 - [ ] **Visual Designer**:
   - [ ] Web-based drag-and-drop template builder (WYSIWYG).
   - [ ] Interactive preview with real data.

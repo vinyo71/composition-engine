@@ -6,8 +6,8 @@
     <div class="invoice-meta">
       <h1 class="invoice-title">INVOICE</h1>
       <div class="meta-row"># {{Id}}</div>
-      <div class="meta-row">Date: {{Date}}</div>
-      <div class="meta-row">Due: {{DueDate}}</div>
+      <div class="meta-row">Date: {{formatDate Date}}</div>
+      <div class="meta-row">Due: {{formatDate DueDate}}</div>
       <div style="margin-top: 10px;">
         <span class="status-badge status-{{Status}}">{{Status}}</span>
       </div>
@@ -48,9 +48,9 @@
       <tr>
         <td>{{Description}}</td>
         <td class="text-right">{{Qty}}</td>
-        <td class="text-right">{{UnitPrice}}</td>
-        <td class="text-right">{{TaxRate}}</td>
-        <td class="text-right">{{Total}}</td>
+        <td class="text-right">{{formatCurrency UnitPrice ../Totals.Currency}}</td>
+        <td class="text-right">{{TaxRate}}%</td>
+        <td class="text-right">{{formatCurrency Total ../Totals.Currency}}</td>
       </tr>
       {{/each}}
     </tbody>
@@ -60,15 +60,15 @@
     <div class="totals-box">
       <div class="total-row">
         <span>Subtotal</span>
-        <span>{{Totals.Subtotal}} {{Totals.Currency}}</span>
+        <span>{{formatCurrency Totals.Subtotal Totals.Currency}}</span>
       </div>
       <div class="total-row">
-        <span>Tax (27%)</span>
-        <span>{{Totals.Tax}} {{Totals.Currency}}</span>
+        <span>Tax</span>
+        <span>{{formatCurrency Totals.Tax Totals.Currency}}</span>
       </div>
       <div class="total-row grand">
         <span>Total</span>
-        <span>{{Totals.GrandTotal}} {{Totals.Currency}}</span>
+        <span>{{formatCurrency Totals.GrandTotal Totals.Currency}}</span>
       </div>
     </div>
   </div>
@@ -81,7 +81,11 @@
     </div>
     <div class="text-right">
       <strong>Terms</strong><br>
+      {{#if (eq Status "Overdue")}}
+      <span style="color: red; font-weight: bold;">PLEASE PAY IMMEDIATELY</span><br>
+      {{else}}
       Payment due within 30 days.<br>
+      {{/if}}
       Thank you for your business!
     </div>
   </footer>

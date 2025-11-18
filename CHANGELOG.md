@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2025-11-18
 ### Added
+- **Handlebars Support**: Replaced basic regex templating with full Handlebars support.
+  - Added helpers: `formatDate`, `formatCurrency`, `formatNumber`, `eq`, `gt`, `lt`.
+  - Updated invoice template to use conditional logic for overdue warnings.
 - **Browser Pool**: Implemented `BrowserPool` to manage Puppeteer instances, preventing crashes under high concurrency.
 - **Invoice Example**: Added a complex invoice generation script (`gen_invoices`), HTML template, and CSS.
 - **CLI Improvements**: Made `input`, `template`, and `outDir` arguments mandatory for better UX.
 - **Streaming Support**: Enhanced `xml.ts` to stream large XML files with low memory usage.
 - **Versioning**: Introduced `deno.json` versioning and this changelog.
+- **Header/Footer Support**: Added CLI flags `--headerTemplate` and `--footerTemplate` to inject HTML headers and footers into PDFs.
+- **Pagination**: Supported standard page numbering classes (`date`, `title`, `url`, `pageNumber`, `totalPages`) in headers/footers.
 
 ### Changed
 - **Refactor**: Moved core logic from `cli.ts` to `engine.ts`, `xml.ts`, and `pdf.ts`.

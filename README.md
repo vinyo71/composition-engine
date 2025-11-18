@@ -9,6 +9,7 @@ The Composition Engine bridges the gap between raw data (XML) and professional d
 ## Features
 
 *   **High Fidelity**: Uses a headless browser (Puppeteer) to render full HTML/CSS, ensuring your PDFs look exactly like your web templates.
+*   **Handlebars Templates**: Full support for logic (`{{#if}}`, `{{#each}}`) and formatting helpers (`formatCurrency`, `formatDate`).
 *   **Scalable Streaming**: Processes gigabyte-sized XML files with millions of records without loading the entire file into memory.
 *   **Flexible Output**:
     *   **Multi Mode**: Generates individual PDF files for each record (e.g., for emailing).
@@ -86,6 +87,8 @@ deno task compose `
   --concurrency 4 `
   --streamTag InvoiceRecord `
   --recordPath Invoices.InvoiceRecord `
+  --headerTemplate ./templates/header.html `
+  --footerTemplate ./templates/footer.html `
   --css ./assets/invoice.css `
   --logLevel debug `
   --limit 50
@@ -97,6 +100,8 @@ deno task compose `
 | :--- | :--- | :--- |
 | `--input` | Path to the XML input file. | `./inp/bank_statements_1000.xml` |
 | `--template` | Path to the HTML template file. | `./templates/statement.html` |
+| `--headerTemplate` | Path to the HTML header template. | `undefined` |
+| `--footerTemplate` | Path to the HTML footer template. | `undefined` |
 | `--outDir` | Directory where PDFs will be saved. | `./out` |
 | `--outName` | Pattern for naming output files. Supports `{index}` and `{id}`. | `{index}.pdf` |
 | `--mode` | `multi` (one PDF per record) or `single` (one combined PDF). | `multi` |

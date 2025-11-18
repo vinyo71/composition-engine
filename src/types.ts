@@ -16,6 +16,8 @@ export type CompositionOptions = {
     engine: Engine;
     chrome?: string; // optional path to Chrome/Chromium/Edge executable
     css?: string; // optional path to a CSS file to inject into the HTML
+    headerTemplate?: string; // optional path to header HTML file
+    footerTemplate?: string; // optional path to footer HTML file
     logLevel: "quiet" | "info" | "debug";
 };
 

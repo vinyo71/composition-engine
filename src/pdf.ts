@@ -158,7 +158,13 @@ export async function closeBrowser(browser: PuppeteerBrowser) {
   }
 }
 
-export async function htmlToPdfBytes(browser: PuppeteerBrowser, fullHtml: string, cssContent = ""): Promise<Uint8Array> {
+export async function htmlToPdfBytes(
+  browser: PuppeteerBrowser,
+  fullHtml: string,
+  cssContent = "",
+  headerTemplate?: string,
+  footerTemplate?: string
+): Promise<Uint8Array> {
   const page = await browser.newPage();
   try {
     await page.setContent(fullHtml, { waitUntil: "networkidle0", timeout: 120000 });
@@ -169,6 +175,9 @@ export async function htmlToPdfBytes(browser: PuppeteerBrowser, fullHtml: string
       format: "A4",
       printBackground: true,
       margin: { top: "20mm", right: "15mm", bottom: "20mm", left: "15mm" },
+      displayHeaderFooter: !!(headerTemplate || footerTemplate),
+      headerTemplate: headerTemplate || "<div></div>",
+      footerTemplate: footerTemplate || "<div></div>",
       timeout: 120000,
     });
     return buf instanceof Uint8Array ? buf : new Uint8Array(buf);

@@ -2,9 +2,10 @@ import { ensureDir } from "jsr:@std/fs/ensure-dir";
 import { basename, extname, join } from "jsr:@std/path";
 import { parseXml, findRecords, streamXmlElements } from "./xml.ts";
 import { compileTemplate } from "./template.ts";
-import { createPdfDocument, renderRecordToPdf, savePdf, createBrowser, closeBrowser, htmlToPdfBytes } from "./pdf.ts";
+import { createPdfDocument, renderRecordToPdf, savePdf, createBrowser, closeBrowser, htmlToPdfBytes, findChromeExecutable } from "./pdf.ts";
 import { Logger } from "./logger.ts";
 import { CompositionOptions } from "./types.ts";
+import { BrowserPool } from "./browser_pool.ts";
 
 // Helper to wrap HTML body
 function wrapHtmlDoc(body: string, extraCss = ""): string {
@@ -27,11 +28,6 @@ function applyOutNamePattern(pattern: string, index: number, record: unknown): s
     return name;
 }
 
-import { BrowserPool } from "./browser_pool.ts";
-import { findChromeExecutable } from "./pdf.ts";
-
-// ... (imports remain the same, remove createBrowser/closeBrowser from pdf.ts import if not used directly)
-
 export class CompositionEngine {
     private logger: Logger;
 
@@ -51,6 +47,17 @@ export class CompositionEngine {
         // Load template
         const templateText = await Deno.readTextFile(this.opts.template);
         const render = compileTemplate(templateText);
+
+        // Load header/footer if present
+        let headerTpl: string | undefined;
+        let footerTpl: string | undefined;
+        if (this.opts.headerTemplate) {
+            headerTpl = await Deno.readTextFile(this.opts.headerTemplate);
+        }
+        if (this.opts.footerTemplate) {
+            footerTpl = await Deno.readTextFile(this.opts.footerTemplate);
+        }
+
         const t_setup_end = performance.now();
 
         // Initialize Browser Pool if needed
@@ -64,11 +71,11 @@ export class CompositionEngine {
         try {
             // Streaming Path
             if (this.opts.streamTag) {
-                await this.processStream(render, cssContent, pool);
+                await this.processStream(render, cssContent, headerTpl, footerTpl, pool);
             }
             // Full Load Path
             else {
-                await this.processBatch(render, cssContent, pool);
+                await this.processBatch(render, cssContent, headerTpl, footerTpl, pool);
             }
         } finally {
             if (pool) await pool.destroy();
@@ -84,7 +91,13 @@ export class CompositionEngine {
         }
     }
 
-    private async processStream(render: (data: any) => string, cssContent: string, pool?: BrowserPool) {
+    private async processStream(
+        render: (data: any) => string,
+        cssContent: string,
+        headerTpl: string | undefined,
+        footerTpl: string | undefined,
+        pool?: BrowserPool
+    ) {
         const { opts, logger } = this;
         const tag = opts.streamTag!;
         let index = 0;
@@ -106,7 +119,7 @@ export class CompositionEngine {
 
                     const browser = await pool.acquire();
                     try {
-                        const bytes = await htmlToPdfBytes(browser as any, full, cssContent);
+                        const bytes = await htmlToPdfBytes(browser as any, full, cssContent, headerTpl, footerTpl);
                         const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
                         const outPath = join(opts.outDir, fileName);
                         await Deno.writeFile(outPath, bytes);
@@ -127,7 +140,6 @@ export class CompositionEngine {
         }
         // PDF-Lib Engine
         else {
-            // ... (pdf-lib logic remains mostly the same, just ensure no pool usage)
             if (opts.mode === "single") {
                 const doc = await createPdfDocument(opts.font);
                 let processed = 0;
@@ -173,7 +185,13 @@ export class CompositionEngine {
         }
     }
 
-    private async processBatch(render: (data: any) => string, cssContent: string, pool?: BrowserPool) {
+    private async processBatch(
+        render: (data: any) => string,
+        cssContent: string,
+        headerTpl: string | undefined,
+        footerTpl: string | undefined,
+        pool?: BrowserPool
+    ) {
         const { opts, logger } = this;
         const xmlText = await Deno.readTextFile(opts.input);
         const xmlRoot = parseXml(xmlText);
@@ -184,10 +202,6 @@ export class CompositionEngine {
 
         if (opts.engine === "browser" && pool) {
             if (opts.mode === "single") {
-                // Single mode with browser: use one browser, one page, append content? 
-                // Actually htmlToPdfBytes renders one HTML to one PDF.
-                // For single PDF from multiple records, we need to concat HTML.
-                // This doesn't need the pool's concurrency, just one browser.
                 const browser = await pool.acquire();
                 try {
                     const parts: string[] = [];
@@ -197,7 +211,7 @@ export class CompositionEngine {
                         if (i < total - 1) parts.push('<div class="page-break"></div>');
                     }
                     const full = wrapHtmlDoc(parts.join("\n"));
-                    const bytes = await htmlToPdfBytes(browser as any, full, cssContent);
+                    const bytes = await htmlToPdfBytes(browser as any, full, cssContent, headerTpl, footerTpl);
                     const base = basename(opts.input, extname(opts.input));
                     const outPath = join(opts.outDir, `${base}.pdf`);
                     await Deno.writeFile(outPath, bytes);
@@ -218,7 +232,7 @@ export class CompositionEngine {
                             const rec = records[i];
                             const htmlFrag = render(rec);
                             const full = wrapHtmlDoc(htmlFrag);
-                            const bytes = await htmlToPdfBytes(browser as any, full, cssContent);
+                            const bytes = await htmlToPdfBytes(browser as any, full, cssContent, headerTpl, footerTpl);
                             const fileName = applyOutNamePattern(opts.outName, i, rec);
                             const outPath = join(opts.outDir, fileName);
                             await Deno.writeFile(outPath, bytes);

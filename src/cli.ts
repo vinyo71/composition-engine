@@ -1,7 +1,7 @@
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import { CompositionEngine } from "./engine.ts";
-import { CompositionOptions, Mode, Engine, LogLevel } from "./types.ts";
-import { Logger } from "./logger.ts";
+import { CompositionOptions, Mode, Engine } from "./types.ts";
+import { Logger, LogLevel } from "./logger.ts";
 
 function getDefaultOptions(): Partial<CompositionOptions> {
   return {
@@ -29,7 +29,7 @@ function parseCli(): CompositionOptions {
       e: "engine",
       ll: "logLevel",
     },
-    string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "font", "streamTag", "engine", "chrome", "css", "logLevel"],
+    string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "font", "streamTag", "engine", "chrome", "css", "headerTemplate", "footerTemplate", "logLevel"],
     boolean: ["version"],
   });
 
@@ -74,6 +74,8 @@ function parseCli(): CompositionOptions {
     engine: (args.engine ?? defaults.engine) as Engine,
     chrome: args.chrome ? String(args.chrome) : undefined,
     css: args.css ? String(args.css) : undefined,
+    headerTemplate: args.headerTemplate ? String(args.headerTemplate) : undefined,
+    footerTemplate: args.footerTemplate ? String(args.footerTemplate) : undefined,
     logLevel: (args.logLevel ?? defaults.logLevel) as LogLevel,
   };
 
@@ -112,7 +114,6 @@ async function main() {
   try {
     await engine.process();
   } catch (err) {
-    // Create a temporary logger if we can't get one from opts yet, or just use console
     console.error("Fatal error:", err);
     Deno.exit(1);
   }
