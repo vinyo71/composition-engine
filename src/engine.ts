@@ -27,6 +27,11 @@ function applyOutNamePattern(pattern: string, index: number, record: unknown): s
     return name;
 }
 
+import { BrowserPool } from "./browser_pool.ts";
+import { findChromeExecutable } from "./pdf.ts";
+
+// ... (imports remain the same, remove createBrowser/closeBrowser from pdf.ts import if not used directly)
+
 export class CompositionEngine {
     private logger: Logger;
 
@@ -48,15 +53,25 @@ export class CompositionEngine {
         const render = compileTemplate(templateText);
         const t_setup_end = performance.now();
 
-        let total = 0;
-
-        // Streaming Path
-        if (this.opts.streamTag) {
-            await this.processStream(render, cssContent);
+        // Initialize Browser Pool if needed
+        let pool: BrowserPool | undefined;
+        if (this.opts.engine === "browser") {
+            const chromePath = this.opts.chrome || await findChromeExecutable();
+            // Limit pool size to concurrency to avoid overloading
+            pool = new BrowserPool(this.opts.concurrency, chromePath, this.opts.logLevel);
         }
-        // Full Load Path
-        else {
-            await this.processBatch(render, cssContent);
+
+        try {
+            // Streaming Path
+            if (this.opts.streamTag) {
+                await this.processStream(render, cssContent, pool);
+            }
+            // Full Load Path
+            else {
+                await this.processBatch(render, cssContent, pool);
+            }
+        } finally {
+            if (pool) await pool.destroy();
         }
 
         const t_end = performance.now();
@@ -69,47 +84,50 @@ export class CompositionEngine {
         }
     }
 
-    private async processStream(render: (data: any) => string, cssContent: string) {
+    private async processStream(render: (data: any) => string, cssContent: string, pool?: BrowserPool) {
         const { opts, logger } = this;
         const tag = opts.streamTag!;
         let index = 0;
 
         // Browser Engine (Multi Only)
-        if (opts.engine === "browser") {
+        if (opts.engine === "browser" && pool) {
             if (opts.mode === "single") {
                 throw new Error("Streaming + --engine=browser with --mode=single is not supported.");
             }
-            const browser = await createBrowser(opts.chrome);
-            try {
-                const batch: Promise<void>[] = [];
-                for await (const xmlChunk of streamXmlElements(opts.input, tag)) {
-                    const currentIndex = index++;
-                    const task = (async () => {
-                        const node = parseXml(xmlChunk);
-                        const rec = node?.[tag] ?? node;
-                        const htmlFrag = render(rec);
-                        const full = wrapHtmlDoc(htmlFrag);
-                        const bytes = await htmlToPdfBytes(browser, full, cssContent);
+
+            const batch: Promise<void>[] = [];
+            for await (const xmlChunk of streamXmlElements(opts.input, tag)) {
+                const currentIndex = index++;
+                const task = (async () => {
+                    const node = parseXml(xmlChunk);
+                    const rec = node?.[tag] ?? node;
+                    const htmlFrag = render(rec);
+                    const full = wrapHtmlDoc(htmlFrag);
+
+                    const browser = await pool.acquire();
+                    try {
+                        const bytes = await htmlToPdfBytes(browser as any, full, cssContent);
                         const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
                         const outPath = join(opts.outDir, fileName);
                         await Deno.writeFile(outPath, bytes);
-                    })();
-                    batch.push(task);
-                    if (batch.length >= opts.concurrency) {
-                        await Promise.all(batch);
-                        batch.length = 0;
-                        logger.info(`Processed ${currentIndex + 1}`);
+                    } finally {
+                        pool.release(browser);
                     }
-                    if (opts.limit && index >= opts.limit) break;
+                })();
+                batch.push(task);
+                if (batch.length >= opts.concurrency) {
+                    await Promise.all(batch);
+                    batch.length = 0;
+                    logger.info(`Processed ${currentIndex + 1}`);
                 }
-                if (batch.length) await Promise.all(batch);
-                logger.info(`Done. Wrote ${Math.min(index, opts.limit ?? index)} PDFs to ${opts.outDir}`);
-            } finally {
-                await closeBrowser(browser);
+                if (opts.limit && index >= opts.limit) break;
             }
+            if (batch.length) await Promise.all(batch);
+            logger.info(`Done. Wrote ${Math.min(index, opts.limit ?? index)} PDFs to ${opts.outDir}`);
         }
         // PDF-Lib Engine
         else {
+            // ... (pdf-lib logic remains mostly the same, just ensure no pool usage)
             if (opts.mode === "single") {
                 const doc = await createPdfDocument(opts.font);
                 let processed = 0;
@@ -155,7 +173,7 @@ export class CompositionEngine {
         }
     }
 
-    private async processBatch(render: (data: any) => string, cssContent: string) {
+    private async processBatch(render: (data: any) => string, cssContent: string, pool?: BrowserPool) {
         const { opts, logger } = this;
         const xmlText = await Deno.readTextFile(opts.input);
         const xmlRoot = parseXml(xmlText);
@@ -164,9 +182,13 @@ export class CompositionEngine {
 
         logger.info(`Records: ${records.length}${opts.limit ? ` (processing ${total})` : ""}`);
 
-        if (opts.engine === "browser") {
+        if (opts.engine === "browser" && pool) {
             if (opts.mode === "single") {
-                const browser = await createBrowser(opts.chrome);
+                // Single mode with browser: use one browser, one page, append content? 
+                // Actually htmlToPdfBytes renders one HTML to one PDF.
+                // For single PDF from multiple records, we need to concat HTML.
+                // This doesn't need the pool's concurrency, just one browser.
+                const browser = await pool.acquire();
                 try {
                     const parts: string[] = [];
                     for (let i = 0; i < total; i++) {
@@ -175,39 +197,38 @@ export class CompositionEngine {
                         if (i < total - 1) parts.push('<div class="page-break"></div>');
                     }
                     const full = wrapHtmlDoc(parts.join("\n"));
-                    const bytes = await htmlToPdfBytes(browser, full, cssContent);
+                    const bytes = await htmlToPdfBytes(browser as any, full, cssContent);
                     const base = basename(opts.input, extname(opts.input));
                     const outPath = join(opts.outDir, `${base}.pdf`);
                     await Deno.writeFile(outPath, bytes);
                     logger.info(`Wrote single PDF: ${outPath}`);
                 } finally {
-                    await closeBrowser(browser);
+                    pool.release(browser);
                 }
             } else {
                 let nextIndex = 0;
                 let processed = 0;
                 const worker = async (id: number) => {
-                    const browser = await createBrowser(opts.chrome);
-                    try {
-                        while (true) {
-                            const i = nextIndex++;
-                            if (i >= total) break;
-                            try {
-                                const rec = records[i];
-                                const htmlFrag = render(rec);
-                                const full = wrapHtmlDoc(htmlFrag);
-                                const bytes = await htmlToPdfBytes(browser, full, cssContent);
-                                const fileName = applyOutNamePattern(opts.outName, i, rec);
-                                const outPath = join(opts.outDir, fileName);
-                                await Deno.writeFile(outPath, bytes);
-                                processed++;
-                                if ((processed % 100) === 0) logger.info(`Worker ${id}: processed ${processed}/${total}`);
-                            } catch (err) {
-                                logger.error(`Failed to process record ${i}:`, err);
-                            }
+                    while (true) {
+                        const i = nextIndex++;
+                        if (i >= total) break;
+
+                        const browser = await pool!.acquire();
+                        try {
+                            const rec = records[i];
+                            const htmlFrag = render(rec);
+                            const full = wrapHtmlDoc(htmlFrag);
+                            const bytes = await htmlToPdfBytes(browser as any, full, cssContent);
+                            const fileName = applyOutNamePattern(opts.outName, i, rec);
+                            const outPath = join(opts.outDir, fileName);
+                            await Deno.writeFile(outPath, bytes);
+                            processed++;
+                            if ((processed % 100) === 0) logger.info(`Worker ${id}: processed ${processed}/${total}`);
+                        } catch (err) {
+                            logger.error(`Failed to process record ${i}:`, err);
+                        } finally {
+                            pool!.release(browser);
                         }
-                    } finally {
-                        await closeBrowser(browser);
                     }
                 };
                 const workers = Array.from({ length: opts.concurrency }, (_, id) => worker(id));
@@ -215,7 +236,7 @@ export class CompositionEngine {
                 logger.info(`Done. Wrote ${processed} PDFs to ${opts.outDir}`);
             }
         } else {
-            // pdf-lib
+            // pdf-lib (unchanged)
             if (opts.mode === "single") {
                 const doc = await createPdfDocument(opts.font);
                 let processed = 0;

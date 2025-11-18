@@ -108,7 +108,7 @@ async function exists(p: string): Promise<boolean> {
   try { await Deno.stat(p); return true; } catch { return false; }
 }
 
-async function findChromeExecutable(): Promise<string | undefined> {
+export async function findChromeExecutable(): Promise<string | undefined> {
   const envPath = Deno.env.get("PUPPETEER_EXECUTABLE_PATH");
   if (envPath && await exists(envPath)) return envPath;
 

@@ -4,10 +4,10 @@
 *Goal: Create a stable, high-fidelity, and impressive demo for the CCM sector.*
 
 ### Robustness & Stability (Critical)
-- [ ] **Fix Puppeteer Crash**: Resolve `ConnectionClosedError` when running with high concurrency.
-  - [ ] Investigate resource exhaustion or race conditions in `htmlToPdfBytes`.
-  - [ ] Implement a robust worker pool that recycles browser instances safely.
-- [ ] **Error Isolation**: Ensure a single failed record does not crash the entire batch.
+- [x] **Fix Puppeteer Crash**: Resolve `ConnectionClosedError` when running with high concurrency.
+  - [x] Investigate resource exhaustion or race conditions in `htmlToPdfBytes`.
+  - [x] Implement a robust worker pool that recycles browser instances safely.
+- [x] **Error Isolation**: Ensure a single failed record does not crash the entire batch.
 
 ### Template Engine (Handlebars)
 - [ ] **Implement Handlebars**: Replace basic string replacement with `npm:handlebars`.

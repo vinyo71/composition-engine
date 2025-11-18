@@ -66,20 +66,25 @@ deno task compose --css ./styles/main.css ...
 ```
 
 ### Comprehensive Example ("Kitchen Sink")
-Here is an example using almost every available option:
+Here is an example using the advanced invoice dataset.
 
+First, generate the invoice data:
+```bash
+deno task gen_invoices 50
+```
+
+Then run the composition engine:
 ```powershell
 deno task compose `
   --input ./inp/monthly_data.xml `
   --template ./templates/invoice.html `
-  --outDir ./dist/invoices `
+  --outDir ./out/invoices `
   --outName "Invoice_{id}_{index}.pdf" `
   --mode multi `
-  --concurrency 8 `
+  --concurrency 4 `
   --streamTag InvoiceRecord `
-  --recordPath Data.Invoices `
-  --css ./assets/print.css `
-  --chrome "C:\Program Files\Google\Chrome\Application\chrome.exe" `
+  --recordPath Invoices.InvoiceRecord `
+  --css ./assets/invoice.css `
   --logLevel debug `
   --limit 50
 ```

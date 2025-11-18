@@ -96,6 +96,10 @@ export async function* streamXmlElements(filePath: string, tagName: string): Asy
       }
     }
   } finally {
-    file.close();
+    try {
+      file.close();
+    } catch {
+      // Ignore if already closed
+    }
   }
 }
