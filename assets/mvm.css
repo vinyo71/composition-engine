@@ -1,0 +1,166 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 11px;
+    color: #333;
+    margin: 0;
+    padding: 40px;
+    /* More padding for print feel */
+    box-sizing: border-box;
+}
+
+/* Header Section */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: 900;
+    color: #005293;
+    /* MVM Blue */
+    text-transform: uppercase;
+    letter-spacing: -1px;
+}
+
+.provider-info {
+    text-align: right;
+    font-size: 10px;
+    color: #666;
+}
+
+/* Info Grid: Customer (Left) vs Bill Data (Right) */
+.info-grid {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.customer-box {
+    width: 45%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 15px;
+    background-color: #f9f9f9;
+}
+
+.customer-box h3 {
+    margin-top: 0;
+    font-size: 12px;
+    color: #005293;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.bill-data {
+    width: 45%;
+    text-align: right;
+}
+
+.bill-row {
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.bill-row strong {
+    color: #005293;
+}
+
+.amount-large {
+    font-size: 24px;
+    font-weight: bold;
+    color: #005293;
+    margin-top: 10px;
+    border-top: 2px solid #005293;
+    padding-top: 5px;
+    display: inline-block;
+}
+
+/* Rezsibox - The Orange Box */
+.rezsi-box {
+    background-color: #ff6600;
+    /* MVM Orange */
+    color: white;
+    padding: 15px;
+    border-radius: 0;
+    /* Sharp corners often seen */
+    margin-bottom: 30px;
+    position: relative;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.rezsi-title {
+    font-weight: bold;
+    font-size: 14px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 5px;
+}
+
+.rezsi-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rezsi-amount {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.rezsi-details {
+    font-size: 10px;
+    text-align: right;
+    opacity: 0.9;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+    font-size: 10px;
+}
+
+th {
+    background-color: #005293;
+    color: white;
+    padding: 8px;
+    text-align: left;
+    font-weight: normal;
+}
+
+td {
+    border-bottom: 1px solid #eee;
+    padding: 8px;
+}
+
+.total-row td {
+    font-weight: bold;
+    border-top: 2px solid #ccc;
+    background-color: #f0f0f0;
+}
+
+/* Footer */
+.footer {
+    margin-top: 50px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+    font-size: 9px;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+}
+
+.footer-col {
+    width: 30%;
+}

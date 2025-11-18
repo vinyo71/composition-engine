@@ -77,6 +77,16 @@ export async function* streamXmlElements(filePath: string, tagName: string): Asy
           buf = buf.slice(-Math.max(startNeedle.length, 64));
           break;
         }
+
+        // Verify it's a whole tag match (not a prefix like <Bills matching <Bill)
+        const nextChar = buf[start + startNeedle.length];
+        const isValidTerminator = !nextChar || [' ', '>', '/', '\t', '\n', '\r'].includes(nextChar);
+        if (!isValidTerminator) {
+          // False positive, advance past this match
+          buf = buf.slice(start + 1);
+          continue;
+        }
+
         const startTagEnd = buf.indexOf(">", start);
         if (startTagEnd === -1) {
           // Need more data to finish start tag

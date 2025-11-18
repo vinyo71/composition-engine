@@ -8,18 +8,34 @@ Handlebars.registerHelper("formatCurrency", (value: any, currency: any) => {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: curr }).format(num);
 });
 
-Handlebars.registerHelper("formatDate", (value: any) => {
+Handlebars.registerHelper("formatDate", (value: any, pattern: any) => {
   if (!value) return "";
   const date = new Date(value);
   if (isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(date);
+
+  if (typeof pattern === "string" && pattern === "YYYY.MM.DD") {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}.${m}.${d}`;
+  }
+
+  return new Intl.DateTimeFormat("hu-HU", { dateStyle: "medium" }).format(date);
 });
 
-Handlebars.registerHelper("formatNumber", (value: any) => {
+Handlebars.registerHelper("formatNumber", (value: any, decimals: any) => {
   const num = Number(value);
   if (isNaN(num)) return value;
-  return new Intl.NumberFormat("en-US").format(num);
+  const opts: Intl.NumberFormatOptions = { style: "decimal" };
+  if (typeof decimals === "number") {
+    opts.minimumFractionDigits = decimals;
+    opts.maximumFractionDigits = decimals;
+  }
+  // Use Hungarian locale for space separators
+  return new Intl.NumberFormat("hu-HU", opts).format(num);
 });
+
+Handlebars.registerHelper("multiply", (a: any, b: any) => Number(a) * Number(b));
 
 Handlebars.registerHelper("eq", (a: any, b: any) => a === b);
 Handlebars.registerHelper("gt", (a: any, b: any) => a > b);

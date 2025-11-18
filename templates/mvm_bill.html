@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Villamosenergia Számla</title>
+    <link rel="stylesheet" href="../assets/mvm.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">MVM Next</div>
+        <div class="provider-info">
+            <strong>MVM Next Energiakereskedelmi Zrt.</strong><br>
+            1081 Budapest, II. János Pál pápa tér 20.<br>
+            Adószám: 12345678-2-44 | Cégjegyzékszám: 01-10-123456
+        </div>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="info-grid">
+        <div class="customer-box">
+            <h3>VEVŐ (FIZETŐ)</h3>
+            <strong>{{Customer.Name}}</strong><br>
+            Fizetendő összeg
+        </div>
+    </div>
+    </div>
+
+    <!-- Rezsibox -->
+    <div class="rezsi-box">
+        <div class="rezsi-title">
+            RezsiBox: A Kormány intézkedéseinek köszönhetően Ön ebben a hónapban megtakarított:
+        </div>
+        <div class="rezsi-content">
+            <div class="rezsi-amount">
+                {{formatNumber Savings.TotalSavings 0}} Ft
+            </div>
+            <div class="rezsi-details">
+                számlázott ár: {{formatNumber Savings.BilledValue 0}} Ft<br>
+                rezsicsökkentés nélküli ár: {{formatNumber Savings.MarketValue 0}} Ft
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Table -->
+    <h3>Számla részletezése</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Megnevezés</th>
+                <th style="text-align: right;">Mennyiség</th>
+                <th style="text-align: right;">Egységár</th>
+                <th style="text-align: right;">Nettó érték</th>
+                <th style="text-align: right;">ÁFA</th>
+                <th style="text-align: right;">Bruttó</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Villamos energia (Rezsicsökkentett)</td>
+                <td style="text-align: right;">{{Financials.DiscountedQty}} kWh</td>
+                <td style="text-align: right;">{{Financials.DiscountedPrice}} Ft</td>
+                <td style="text-align: right;">{{formatNumber (multiply Financials.DiscountedQty
+                    Financials.DiscountedPrice) 0}}</td>
+                <td style="text-align: right;">27%</td>
+                <td style="text-align: right;">{{formatNumber (multiply (multiply Financials.DiscountedQty
+                    Financials.DiscountedPrice) 1.27) 0}}</td>
+            </tr>
+            {{#if (gt Financials.MarketQty 0)}}
+            <tr>
+                <td>Villamos energia (Lakossági piaci)</td>
+                <td style="text-align: right;">{{Financials.MarketQty}} kWh</td>
+                <td style="text-align: right;">{{Financials.MarketPrice}} Ft</td>
+                <td style="text-align: right;">{{formatNumber (multiply Financials.MarketQty Financials.MarketPrice) 0}}
+                </td>
+                <td style="text-align: right;">27%</td>
+                <td style="text-align: right;">{{formatNumber (multiply (multiply Financials.MarketQty
+                    Financials.MarketPrice) 1.27) 0}}</td>
+            </tr>
+            {{/if}}
+            <tr class="total-row">
+                <td colspan="3">Összesen</td>
+                <td style="text-align: right;">{{formatNumber Financials.NetAmount 0}}</td>
+                <td style="text-align: right;">{{formatNumber Financials.VAT 0}}</td>
+                <td style="text-align: right;">{{formatNumber Financials.GrossAmount 0}} Ft</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-col">
+            <strong>MVM Next Energiakereskedelmi Zrt.</strong><br>
+            Székhely: 1081 Budapest, II. János Pál pápa tér 20.<br>
+            Levélcím: 1439 Budapest, Pf. 700
+        </div>
+        <div class="footer-col">
+            <strong>Ügyfélszolgálat</strong><br>
+            Telefon: 1475<br>
+            E-mail: ugyfelszolgalat@mvm.hu<br>
+            Web: www.mvmnext.hu
+        </div>
+        <div class="footer-col">
+            <strong>Bankszámlaszámok</strong><br>
+            OTP Bank: 11700001-12345678<br>
+            MBH Bank: 10300002-87654321
+        </div>
+    </div>
+
+</body>
+
+</html>
