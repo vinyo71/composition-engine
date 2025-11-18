@@ -3,11 +3,8 @@ import { CompositionEngine } from "./engine.ts";
 import { CompositionOptions, Mode, Engine, LogLevel } from "./types.ts";
 import { Logger } from "./logger.ts";
 
-function getDefaultOptions(): CompositionOptions {
+function getDefaultOptions(): Partial<CompositionOptions> {
   return {
-    input: "./inp/bank_statements_1000.xml",
-    template: "./templates/statement.html",
-    outDir: "./out",
     outName: "{index}.pdf",
     format: "pdf",
     mode: "multi",
@@ -37,15 +34,30 @@ function parseCli(): CompositionOptions {
   });
 
   const defaults = getDefaultOptions();
+
+  // Required arguments
+  if (!args.input) {
+    console.error("Error: --input <path> is required.");
+    Deno.exit(1);
+  }
+  if (!args.template) {
+    console.error("Error: --template <path> is required.");
+    Deno.exit(1);
+  }
+  if (!args.outDir) {
+    console.error("Error: --outDir <path> is required.");
+    Deno.exit(1);
+  }
+
   const opts: CompositionOptions = {
-    input: String(args.input ?? defaults.input),
-    template: String(args.template ?? defaults.template),
-    outDir: String(args.outDir ?? defaults.outDir),
+    input: String(args.input),
+    template: String(args.template),
+    outDir: String(args.outDir),
     outName: String(args.outName ?? defaults.outName),
     format: (args.format ?? defaults.format) as "pdf",
     mode: (args.mode ?? defaults.mode) as Mode,
     recordPath: args.recordPath ? String(args.recordPath) : undefined,
-    concurrency: args.concurrency ? Number(args.concurrency) : defaults.concurrency,
+    concurrency: args.concurrency ? Number(args.concurrency) : defaults.concurrency!,
     limit: args.limit ? Number(args.limit) : undefined,
     font: args.font ? String(args.font) : undefined,
     streamTag: args.streamTag ? String(args.streamTag) : undefined,
