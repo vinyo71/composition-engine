@@ -26,6 +26,10 @@
 - [ ] **Asset Management**:
   - [ ] Ensure relative paths for images (logos) and fonts work correctly in the rendered PDF.
 
+### Demo Content & Collateral
+- [ ] **Real-World Bank Statement**: Create realistic data and template.
+- [ ] **Product Data Sheet**: Create a template with features, requirements, and intro.
+
 ---
 
 ## 🛡️ Phase 2: Production Hardening
@@ -42,6 +46,12 @@
 - [ ] **Backpressure**: Implement backpressure in the streaming pipeline to prevent memory spikes.
 - [ ] **Batch Tuning**: Optimize batch sizes for different concurrency levels.
 
+### Deployment & Observability
+- [ ] **Executable Binary**: Compile to standalone executable.
+- [ ] **Performance Metrics**: Measure pages/sec and generation phases.
+- [ ] **Detailed Logging**: More granular logs.
+- [ ] **Job Statistics**: Output TXT/PDF report with generation stats.
+
 ### Configuration & UX
 - [ ] **Config File**: Support `composition.config.json` for default settings.
 - [ ] **CLI Improvements**: Better progress bars and actionable error messages.
@@ -51,6 +61,10 @@
 ## 🔮 Phase 3: Future Features (Competitive Parity)
 *Goal: Match features of enterprise CCM tools like DocBridge Impress and OL Connect.*
 
+- [ ] **Interfaces**:
+  - [ ] **REST API**: Server implementation alongside CLI.
+- [ ] **Legacy Output**:
+  - [ ] Support PCL and AFP formats.
 - [ ] **Multi-Channel Output**:
   - [ ] Generate HTML emails alongside PDFs (Omnichannel).
   - [ ] Responsive templates that adapt to device size (Digital First).
