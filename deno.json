@@ -1,4 +1,5 @@
 {
+  "version": "0.1.0",
   "tasks": {
     "compose": "deno run -A src/cli.ts",
     "dev": "deno run -A --watch=src src/cli.ts",

@@ -1,5 +1,7 @@
 # Composition Engine
 
+![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
+
 **High-performance, high-fidelity document generation at scale.**
 
 The Composition Engine bridges the gap between raw data (XML) and professional documents (PDF). It is designed to process massive datasets efficiently, producing pixel-perfect documents using HTML templates and headless browser rendering.

@@ -30,8 +30,18 @@ function parseCli(): CompositionOptions {
       ll: "logLevel",
     },
     string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "font", "streamTag", "engine", "chrome", "css", "logLevel"],
-    boolean: [],
+    boolean: ["version"],
   });
+
+  if (args.version) {
+    try {
+      const config = JSON.parse(Deno.readTextFileSync(new URL("../deno.json", import.meta.url)));
+      console.log(`Composition Engine v${config.version}`);
+    } catch {
+      console.log("Composition Engine (version unknown)");
+    }
+    Deno.exit(0);
+  }
 
   const defaults = getDefaultOptions();
 
@@ -102,8 +112,8 @@ async function main() {
   try {
     await engine.process();
   } catch (err) {
-    const logger = new Logger(opts.logLevel);
-    logger.error("Fatal error:", err);
+    // Create a temporary logger if we can't get one from opts yet, or just use console
+    console.error("Fatal error:", err);
     Deno.exit(1);
   }
 }
