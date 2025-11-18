@@ -1,72 +1,71 @@
 # Backlog
 
-Status legend
-- [ ] Todo
-- [~] In progress
-- [x] Done
+## 🚀 Phase 1: Demo Readiness (Must-Haves)
+*Goal: Create a stable, high-fidelity, and impressive demo for the CCM sector.*
 
-Now (high impact)
-- [x] Refactor project
-  - [x] Extract streaming logic and worker pool from `cli.ts` into dedicated classes
-  - [x] Strengthen types for parsed XML records (reduce `any` usage)
-- [x] Remove Python dependency
-  - [x] Rewrite `gen_data.py` in Deno/TypeScript (`src/gen_data.ts`)
-  - [x] Update `deno.json` task to run the new script
-- [ ] Browser engine
-  - [ ] Add header/footer support (per page) with placeholders (page X of Y, date)
-  - [ ] Page-break controls via CSS classes and template hooks
-  - [ ] Reuse a pool of pages/tabs for performance (limit concurrent pages to concurrency)
-- [ ] Streaming
-  - [ ] Add backpressure controls and progress reporting (every N items)
-  - [ ] Support XML namespaces in streamTag detection
-- [ ] CLI/UX
-  - [ ] --chrome auto-detect messaging: add actionable hints if not found
-  - [x] --css <file> to inject external styles for browser engine
-  - [ ] --locale, --dateFormat, --currency to format values in templates
+### Robustness & Stability (Critical)
+- [ ] **Fix Puppeteer Crash**: Resolve `ConnectionClosedError` when running with high concurrency.
+  - [ ] Investigate resource exhaustion or race conditions in `htmlToPdfBytes`.
+  - [ ] Implement a robust worker pool that recycles browser instances safely.
+- [ ] **Error Isolation**: Ensure a single failed record does not crash the entire batch.
 
-Next
-- [ ] Template engine
-  - [ ] Implement Handlebars (npm:handlebars) as the template engine
-  - [ ] Register helpers: {{formatDate path pattern}}, {{formatAmount path currency/locale}}
-  - [ ] Conditionals: {{#if path}}...{{/if}} and {{#unless path}}...{{/unless}}
-  - [ ] Partials/includes for shared header/footer blocks
-- [ ] XML
-  - [ ] Robust record discovery: multiple arrays, named paths, and heuristics
-  - [ ] Validate record shape and provide user-friendly diffs for missing fields
-- [ ] Error handling
-  - [ ] Per-record error isolation (skip and continue, write a .err log)
-  - [ ] Retry policy for browser render failures (transient crashes)
-- [ ] Logging/metrics
-  - [x] --logLevel (info|warn|debug), structured logs
-  - [x] Timing summary: parse, render, write; throughput metrics
-- [ ] Performance
-  - [ ] Batch size tuning in streaming multi mode
-  - [x] Memory guardrails for single mode with huge datasets (auto-switch or warn)
-- [ ] Output
-  - [ ] Zip output option (--zip) for multi PDFs
-  - [ ] Deterministic file naming options: --pad <digits>, --prefix/--suffix
-- [ ] Config
-  - [ ] composition.config.json support (defaults, profiles), override via CLI
+### Template Engine (Handlebars)
+- [ ] **Implement Handlebars**: Replace basic string replacement with `npm:handlebars`.
+- [ ] **Logic & Control Flow**: Support `{{#if}}`, `{{#each}}`, `{{#unless}}`.
+- [ ] **Formatting Helpers**:
+  - [ ] `{{formatDate value pattern}}`
+  - [ ] `{{formatCurrency value currency locale}}`
+  - [ ] `{{formatNumber value decimals}}`
 
-Later
-- [ ] Multi-template routing (choose template by record property/XPath)
-- [ ] Image/assets bundling for browser engine (local asset base path)
-- [ ] Sandbox for untrusted templates
-- [ ] CSV/JSON input support in addition to XML
-- [ ] Windows-specific path normalization improvements in CLI
+### Advanced Layout & Visuals
+- [ ] **Header/Footer & Pagination**:
+  - [ ] Implement standard header/footer injection for Browser engine.
+  - [ ] Support "Page X of Y" placeholders.
+- [ ] **Dynamic Charts**:
+  - [ ] Integrate a charting library (e.g., Chart.js or QuickChart) to render graphs in the PDF (e.g., "Spending Breakdown").
+- [ ] **Asset Management**:
+  - [ ] Ensure relative paths for images (logos) and fonts work correctly in the rendered PDF.
 
-Quality
-- [ ] Tests
-  - [ ] Unit tests: xml.ts (critical: `streamXmlElements`), template.ts
-  - [ ] Integration: render small dataset and golden-compare page count
-  - [ ] Streaming tests with synthetic large XML
-- [ ] CI
-  - [ ] GitHub Actions: deno fmt, lint, check, test; cache npm/jsr
-  - [ ] Optional: upload sample artifacts (first 10 PDFs)
+---
 
-Docs
-- [x] README
-  - [x] Add section for formatting helpers and examples once implemented
-  - [x] Add troubleshooting for headless browser sandbox flags (Linux)
-- [ ] Examples
-  - [ ] Include 2–3 example templates (minimal, table-heavy, locale formats)
+## 🛡️ Phase 2: Production Hardening
+*Goal: Make the engine reliable, testable, and easy to operate in production.*
+
+### Quality & Testing
+- [ ] **Unit Tests**:
+  - [ ] `xml.ts`: Verify `streamXmlElements` handles chunk boundaries correctly.
+  - [ ] `template.ts`: Verify Handlebars helpers and logic.
+- [ ] **Integration Tests**:
+  - [ ] End-to-end test with a "Golden Master" PDF comparison.
+
+### Performance & Streaming
+- [ ] **Backpressure**: Implement backpressure in the streaming pipeline to prevent memory spikes.
+- [ ] **Batch Tuning**: Optimize batch sizes for different concurrency levels.
+
+### Configuration & UX
+- [ ] **Config File**: Support `composition.config.json` for default settings.
+- [ ] **CLI Improvements**: Better progress bars and actionable error messages.
+
+---
+
+## 🔮 Phase 3: Future Features (Competitive Parity)
+*Goal: Match features of enterprise CCM tools like DocBridge Impress and OL Connect.*
+
+- [ ] **Multi-Channel Output**:
+  - [ ] Generate HTML emails alongside PDFs (Omnichannel).
+  - [ ] Responsive templates that adapt to device size (Digital First).
+- [ ] **Visual Designer**:
+  - [ ] Web-based drag-and-drop template builder (WYSIWYG).
+  - [ ] Interactive preview with real data.
+- [ ] **Multi-Template Routing**: Select template dynamically based on record data.
+- [ ] **Input Formats**: Support JSON and CSV input sources.
+- [ ] **Output Options**: Support ZIP archiving of generated PDFs.
+- [ ] **Sandboxing**: Secure execution environment for untrusted templates.
+
+---
+
+## ✅ Completed
+- [x] **Refactor Project**: Extracted core logic into `engine.ts`, `xml.ts`, etc.
+- [x] **Remove Python**: Replaced `gen_data.py` with Deno-based `src/gen_data.ts` and `src/gen_invoice_data.ts`.
+- [x] **Documentation**: Rewrote README with "Kitchen Sink" examples and clear usage guides.
+- [x] **Type Safety**: Improved TypeScript types for XML records.
