@@ -1,0 +1,88 @@
+<div class="invoice-container">
+  <header class="header">
+    <div class="logo">
+      Composition<br>Engine
+    </div>
+    <div class="invoice-meta">
+      <h1 class="invoice-title">INVOICE</h1>
+      <div class="meta-row"># {{Id}}</div>
+      <div class="meta-row">Date: {{Date}}</div>
+      <div class="meta-row">Due: {{DueDate}}</div>
+      <div style="margin-top: 10px;">
+        <span class="status-badge status-{{Status}}">{{Status}}</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="addresses">
+    <div class="address-block">
+      <h3>Bill To</h3>
+      <p>{{Client.Name}}</p>
+      <div class="details">
+        {{Client.Address}}<br>
+        VAT: {{Client.VatId}}
+      </div>
+    </div>
+    <div class="address-block text-right">
+      <h3>From</h3>
+      <p>{{Sender.Name}}</p>
+      <div class="details">
+        {{Sender.Address}}<br>
+        VAT: {{Sender.VatId}}
+      </div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="col-desc">Description</th>
+        <th class="text-right">Qty</th>
+        <th class="text-right">Price</th>
+        <th class="text-right">Tax</th>
+        <th class="text-right">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each Items.Item}}
+      <tr>
+        <td>{{Description}}</td>
+        <td class="text-right">{{Qty}}</td>
+        <td class="text-right">{{UnitPrice}}</td>
+        <td class="text-right">{{TaxRate}}</td>
+        <td class="text-right">{{Total}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="totals-box">
+      <div class="total-row">
+        <span>Subtotal</span>
+        <span>{{Totals.Subtotal}} {{Totals.Currency}}</span>
+      </div>
+      <div class="total-row">
+        <span>Tax (27%)</span>
+        <span>{{Totals.Tax}} {{Totals.Currency}}</span>
+      </div>
+      <div class="total-row grand">
+        <span>Total</span>
+        <span>{{Totals.GrandTotal}} {{Totals.Currency}}</span>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div>
+      <strong>Payment Details</strong><br>
+      IBAN: {{Sender.IBAN}}<br>
+      SWIFT: {{Sender.SWIFT}}
+    </div>
+    <div class="text-right">
+      <strong>Terms</strong><br>
+      Payment due within 30 days.<br>
+      Thank you for your business!
+    </div>
+  </footer>
+</div>

@@ -89,15 +89,10 @@ export class CompositionEngine {
                         const rec = node?.[tag] ?? node;
                         const htmlFrag = render(rec);
                         const full = wrapHtmlDoc(htmlFrag);
-                        const page = await browser.newPage();
-                        try {
-                            const bytes = await htmlToPdfBytes(page, full, cssContent);
-                            const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
-                            const outPath = join(opts.outDir, fileName);
-                            await Deno.writeFile(outPath, bytes);
-                        } finally {
-                            await page.close();
-                        }
+                        const bytes = await htmlToPdfBytes(browser, full, cssContent);
+                        const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
+                        const outPath = join(opts.outDir, fileName);
+                        await Deno.writeFile(outPath, bytes);
                     })();
                     batch.push(task);
                     if (batch.length >= opts.concurrency) {

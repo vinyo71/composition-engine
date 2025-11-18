@@ -28,7 +28,7 @@ The Composition Engine bridges the gap between raw data (XML) and professional d
 
 2.  **Run the Engine**:
     ```bash
-    deno task compose --input ./inp/bank_statements_1000.xml --outDir ./out --mode multi
+    deno task compose --input ./inp/bank_statements_1000.xml --template ./templates/statement.html --outDir ./out --mode multi
     ```
 
 ## Usage Guide
@@ -68,19 +68,19 @@ deno task compose --css ./styles/main.css ...
 ### Comprehensive Example ("Kitchen Sink")
 Here is an example using almost every available option:
 
-```bash
-deno task compose \
-  --input ./inp/monthly_data.xml \
-  --template ./templates/invoice.html \
-  --outDir ./dist/invoices \
-  --outName "Invoice_{id}_{index}.pdf" \
-  --mode multi \
-  --concurrency 8 \
-  --streamTag InvoiceRecord \
-  --recordPath Data.Invoices \
-  --css ./assets/print.css \
-  --chrome "C:\Program Files\Google\Chrome\Application\chrome.exe" \
-  --logLevel debug \
+```powershell
+deno task compose `
+  --input ./inp/monthly_data.xml `
+  --template ./templates/invoice.html `
+  --outDir ./dist/invoices `
+  --outName "Invoice_{id}_{index}.pdf" `
+  --mode multi `
+  --concurrency 8 `
+  --streamTag InvoiceRecord `
+  --recordPath Data.Invoices `
+  --css ./assets/print.css `
+  --chrome "C:\Program Files\Google\Chrome\Application\chrome.exe" `
+  --logLevel debug `
   --limit 50
 ```
 
