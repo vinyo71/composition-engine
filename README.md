@@ -1,144 +1,115 @@
-# composition-engine
+# Composition Engine
 
-Summary
-- Parses XML, extracts records, and produces high-fidelity PDFs from HTML templates at scale.
-- Default rendering engine uses a headless browser (Puppeteer) for full HTML+CSS support.
-- A legacy text-only engine (`pdf-lib`) is available but deprecated.
+**High-performance, high-fidelity document generation at scale.**
 
-Features
-- Record detection from XML (auto or via --recordPath).
-- Two modes:
-  - multi: one PDF per record (concurrent)
-  - single: one combined PDF
-- Concurrency control with --concurrency.
-- Output naming pattern supports {index} and {id}.
-- Unicode support via user-supplied TTF/OTF font (--font) for the deprecated pdf-lib engine.
-- Streaming mode for very large XMLs via --streamTag (no full-file load).
-- Full HTML+CSS layout is the default.
-- External CSS styling with the --css flag.
+The Composition Engine bridges the gap between raw data (XML) and professional documents (PDF). It is designed to process massive datasets efficiently, producing pixel-perfect documents using HTML templates and headless browser rendering.
 
-User Docs
+## Features
 
-Requirements
-- Deno installed
-- Python available as py (for sample data generation)
+*   **High Fidelity**: Uses a headless browser (Puppeteer) to render full HTML/CSS, ensuring your PDFs look exactly like your web templates.
+*   **Scalable Streaming**: Processes gigabyte-sized XML files with millions of records without loading the entire file into memory.
+*   **Flexible Output**:
+    *   **Multi Mode**: Generates individual PDF files for each record (e.g., for emailing).
+    *   **Single Mode**: Combines all records into a single PDF (e.g., for archival or print).
+*   **Concurrency**: Parallel processing to maximize CPU usage and throughput.
 
-Generate data
-```
-deno task gen_data
-```
-- The generated XML will be saved under `./inp/` (e.g., `./inp/bank_statements_1000.xml`).
+## Requirements
 
-Quick start
-- You need a local Chrome/Chromium/Edge executable or set PUPPETEER_EXECUTABLE_PATH.
-- Multi-PDF (one file per record), auto-detect records (PowerShell):
-```
-deno task compose --input .\inp\bank_statements_1000.xml --template .\templates\statement.html --outDir .\out --mode multi --concurrency 8
-```
-- Single combined PDF (PowerShell):
-```
-deno task compose --input .\inp\bank_statements_1000.xml --template .\templates\statement.html --outDir .\out --mode single
-```
-- Recommended: pass the executable via --chrome.
-  - Windows (Chrome):
+*   **Deno**: [Install Deno](https://deno.land/#installation)
+*   **Python**: Required only for generating sample data (`deno task gen_data`).
+*   **Chrome/Edge**: A local installation of Google Chrome, Chromium, or Microsoft Edge.
+
+## Quick Start
+
+1.  **Generate Sample Data**:
+    ```bash
+    deno task gen_data
     ```
-    deno task compose --chrome "C:\Program Files\Google\Chrome\Application\chrome.exe" --input .\inp\bank_statements_1000.xml --template .\templates\statement.html --outDir .\out --mode single
-    ```
-  - Windows (Edge):
-    ```
-    deno task compose --chrome "C:\Program Files\Microsoft\Edge\Application\msedge.exe" --input .\inp\bank_statements_1000.xml --template .\templates\statement.html --outDir .\out --mode multi
-    ```
-  - Linux:
-    ```
-    deno task compose --chrome /usr/bin/google-chrome --input ./inp/bank_statements_1000.xml --template ./templates/statement.html --outDir ./out --mode multi
-    ```
-  - macOS:
-    ```
-    deno task compose --chrome "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --input ./inp/bank_statements_1000.xml --template ./templates/statement.html --outDir ./out --mode single
-    ```
-- Alternatively set env var:
-  - PowerShell:
-    ```
-    $env:PUPPETEER_EXECUTABLE_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"
-    deno task compose ...
-    ```
-  - Bash:
-    ```
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome deno task compose ...
+    This creates `./inp/bank_statements_1000.xml`.
+
+2.  **Run the Engine**:
+    ```bash
+    deno task compose --input ./inp/bank_statements_1000.xml --outDir ./out --mode multi
     ```
 
-Large XMLs (streaming)
-- Process huge files without loading them fully:
-  - Multi (browser, default):
+## Usage Guide
+
+### Basic Usage
+The core command is `deno task compose`. By default, it looks for input in `./inp` and templates in `./templates`.
+
+```bash
+deno task compose --input <path-to-xml> --template <path-to-html> --outDir <output-dir>
+```
+
+### Output Modes
+*   **Multi (Default)**: Creates one PDF per record. Best for digital distribution.
+    ```bash
+    --mode multi --outName "Statement_{id}.pdf"
     ```
-    deno task compose --input .\inp\bank_statements_1000000.xml --template .\templates\statement.html --outDir .\out --mode multi --concurrency 4 --streamTag BankStatement
+*   **Single**: Creates one giant PDF containing all records, separated by page breaks. Best for printing.
+    ```bash
+    --mode single
     ```
-  - Multi (pdf-lib, deprecated):
-    ```
-    deno task compose --engine pdf-lib --input .\inp\bank_statements_1000000.xml --template .\templates\statement.html --outDir .\out --mode multi --concurrency 8 --streamTag BankStatement
-    ```
-  - Single (pdf-lib only; browser single + streaming is not supported)
 
-Development
-- Watch + strict type-check:
-```
-deno task dev
-```
-- Watch + skip type-checks:
-```
-deno task dev:nocheck
+### Streaming (Large Files)
+For very large XML files (e.g., >100MB), use the `--streamTag` flag. This tells the engine to read the file chunk-by-chunk, keeping memory usage low.
+
+```bash
+# Process a 1GB file without crashing memory
+deno task compose --input huge_data.xml --streamTag BankStatement --mode multi
 ```
 
-Usage (compose)
-- Auto-detect records or specify explicitly with --recordPath:
-```
---recordPath BankStatements.BankStatement
-```
-- Verify quickly with your dataset (uses default input at ./inp/bank_statements_1000.xml):
-```
-deno run -A src/cli.ts --limit 100
+### Styling
+You can inject an external CSS file to style your templates. This is useful for sharing styles across multiple templates.
+
+```bash
+deno task compose --css ./styles/main.css ...
 ```
 
-CLI options
-- --input : XML input (default: ./inp/bank_statements_1000.xml)
-- --template : template file (default: ./templates/statement.html)
-- --outDir <dir>: output directory (default: ./out)
-- --outName <pattern>: output name pattern (default: {index}.pdf; supports {index}, {id})
-- --mode <multi|single>: output mode (default: multi)
-- --format <pdf>: output format (pdf only)
-- --recordPath <path>: explicit path to record array (dot-notation)
-- --concurrency <n>: workers for multi mode (default: CPU cores)
-- --limit <n>: process only first N records
-- --font <path>: TTF/OTF font path for Unicode text (deprecated pdf-lib engine)
-- --engine <browser|pdf-lib>: choose rendering engine (default: browser)
-- --streamTag <tag>: stream repeating elements by tag (e.g., BankStatement) to avoid full-file loads
-- --css <file>: inject external CSS file for browser engine
-- --logLevel <quiet|info|debug>: Controls the verbosity of console output (default: info)
+### Comprehensive Example ("Kitchen Sink")
+Here is an example using almost every available option:
 
-Fonts and Unicode
-- The default `browser` engine uses system fonts via Chromium; typically no extra font config is needed.
-- The deprecated `pdf-lib` engine requires a Unicode TTF/OTF via --font for non-ASCII (e.g., Hungarian “ő/ű”).
+```bash
+deno task compose \
+  --input ./inp/monthly_data.xml \
+  --template ./templates/invoice.html \
+  --outDir ./dist/invoices \
+  --outName "Invoice_{id}_{index}.pdf" \
+  --mode multi \
+  --concurrency 8 \
+  --streamTag InvoiceRecord \
+  --recordPath Data.Invoices \
+  --css ./assets/print.css \
+  --chrome "C:\Program Files\Google\Chrome\Application\chrome.exe" \
+  --logLevel debug \
+  --limit 50
+```
 
-Trade-offs
-- `browser` engine (default): full HTML/CSS fidelity, slower and heavier (Chromium startup and rendering).
-- `pdf-lib` engine (deprecated): fastest, simplest layout (text-only).
+## Configuration Reference
 
-Performance and Logging
-- **Timing Summary**: At the end of execution, a detailed timing summary is displayed (unless `--logLevel quiet` is used), breaking down time spent in setup, XML loading, XML parsing, and PDF processing. Throughput metrics (records per second) are also provided.
-- **Memory Guardrail**: When using `--mode single` with a large number of records, a warning will be issued, advising to switch to `--mode multi` or `--streamTag` to reduce memory consumption.
-- **Puppeteer Timeout**: The internal timeout for Puppeteer operations has been increased to better handle large single-PDF generation tasks.
-- **--logLevel <quiet|info|debug>**: Controls the verbosity of console output.
-  - `quiet`: Suppresses most informational messages, including the timing summary.
-  - `info` (default): Shows progress updates and the timing summary.
-  - `debug`: Shows detailed debugging information.
+| Flag | Description | Default |
+| :--- | :--- | :--- |
+| `--input` | Path to the XML input file. | `./inp/bank_statements_1000.xml` |
+| `--template` | Path to the HTML template file. | `./templates/statement.html` |
+| `--outDir` | Directory where PDFs will be saved. | `./out` |
+| `--outName` | Pattern for naming output files. Supports `{index}` and `{id}`. | `{index}.pdf` |
+| `--mode` | `multi` (one PDF per record) or `single` (one combined PDF). | `multi` |
+| `--streamTag` | XML tag name to stream (e.g., `Invoice`). Enables low-memory processing. | `undefined` |
+| `--recordPath` | Dot-notation path to the array of records in the XML (e.g., `Root.Rows`). | Auto-detected |
+| `--concurrency` | Number of parallel workers (browser tabs). | CPU Core Count |
+| `--css` | Path to an external CSS file to inject. | `undefined` |
+| `--chrome` | Path to the Chrome/Edge executable. | Auto-detected |
+| `--limit` | Stop after processing N records. Useful for testing. | `undefined` |
+| `--logLevel` | `quiet`, `info`, or `debug`. | `info` |
+| `--engine` | `browser` (recommended) or `pdf-lib` (deprecated text-only). | `browser` |
 
-Troubleshooting
-- **failed to find chrome executable**:
-  - Make sure you have Google Chrome, Chromium, or MS Edge installed.
-  - If installed in a non-standard location, provide the path via `--chrome <path/to/exe>`
-  - Alternatively, set the `PUPPETEER_EXECUTABLE_PATH` environment variable.
-- **failed to allocate string; buffer exceeds maximum length**:
-  - Use --streamTag to enable streaming.
-  - Prefer --mode multi for massive datasets.
-- **WinAnsi cannot encode "..."**:
-  - This is a `pdf-lib` engine error. Use `--font` with the deprecated engine, or switch to the default `--engine browser` for full Unicode with system fonts.
+## Advanced Topics
+
+### Performance & Logging
+The engine provides a detailed timing summary at the end of execution.
+*   Use `--logLevel debug` to see per-record processing details.
+*   Use `--concurrency` to tune performance based on your machine's capabilities.
+
+### Troubleshooting
+*   **"Failed to find chrome executable"**: Ensure Chrome is installed or provide the path via `--chrome`.
+*   **"Buffer exceeds maximum length"**: You are trying to load a huge XML file into memory. Use `--streamTag` to switch to streaming mode.

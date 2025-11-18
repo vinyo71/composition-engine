@@ -55,3 +55,47 @@ export function findRecords(root: any, recordPath?: string): any[] {
   // Fallback: single record as whole document
   return [root];
 }
+
+// Stream <tagName>...</tagName> blocks from a large XML file without loading it fully
+export async function* streamXmlElements(filePath: string, tagName: string): AsyncGenerator<string> {
+  const file = await Deno.open(filePath, { read: true });
+  try {
+    const reader = file.readable.pipeThrough(new TextDecoderStream()).getReader();
+    let buf = "";
+    const startNeedle = `<${tagName}`;
+    const endNeedle = `</${tagName}>`;
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += value ?? "";
+
+      while (true) {
+        const start = buf.indexOf(startNeedle);
+        if (start === -1) {
+          // Keep a small tail in case a start tag spans chunks
+          buf = buf.slice(-Math.max(startNeedle.length, 64));
+          break;
+        }
+        const startTagEnd = buf.indexOf(">", start);
+        if (startTagEnd === -1) {
+          // Need more data to finish start tag
+          break;
+        }
+        const end = buf.indexOf(endNeedle, startTagEnd + 1);
+        if (end === -1) {
+          // Need more data for end tag
+          // Keep from start to end to avoid losing partial element
+          buf = buf.slice(start);
+          break;
+        }
+        const endClose = end + endNeedle.length;
+        const elementXml = buf.slice(start, endClose);
+        yield elementXml;
+        buf = buf.slice(endClose);
+      }
+    }
+  } finally {
+    file.close();
+  }
+}

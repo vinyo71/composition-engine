@@ -6,7 +6,9 @@ Status legend
 - [x] Done
 
 Now (high impact)
-- [ ] Refractor project
+- [x] Refactor project
+  - [x] Extract streaming logic and worker pool from `cli.ts` into dedicated classes
+  - [x] Strengthen types for parsed XML records (reduce `any` usage)
 - [ ] Browser engine
   - [ ] Add header/footer support (per page) with placeholders (page X of Y, date)
   - [ ] Page-break controls via CSS classes and template hooks
@@ -21,7 +23,8 @@ Now (high impact)
 
 Next
 - [ ] Template engine
-  - [ ] Helpers: {{formatDate path pattern}}, {{formatAmount path currency/locale}}
+  - [ ] Implement Handlebars (npm:handlebars) as the template engine
+  - [ ] Register helpers: {{formatDate path pattern}}, {{formatAmount path currency/locale}}
   - [ ] Conditionals: {{#if path}}...{{/if}} and {{#unless path}}...{{/unless}}
   - [ ] Partials/includes for shared header/footer blocks
 - [ ] XML
@@ -51,7 +54,7 @@ Later
 
 Quality
 - [ ] Tests
-  - [ ] Unit tests: xml.ts, template.ts
+  - [ ] Unit tests: xml.ts (critical: `streamXmlElements`), template.ts
   - [ ] Integration: render small dataset and golden-compare page count
   - [ ] Streaming tests with synthetic large XML
 - [ ] CI
@@ -59,8 +62,8 @@ Quality
   - [ ] Optional: upload sample artifacts (first 10 PDFs)
 
 Docs
-- [ ] README
-  - [ ] Add section for formatting helpers and examples once implemented
-  - [ ] Add troubleshooting for headless browser sandbox flags (Linux)
+- [x] README
+  - [x] Add section for formatting helpers and examples once implemented
+  - [x] Add troubleshooting for headless browser sandbox flags (Linux)
 - [ ] Examples
   - [ ] Include 2–3 example templates (minimal, table-heavy, locale formats)
