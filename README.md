@@ -113,6 +113,7 @@ deno task compose `
 | `--limit` | Stop after processing N records. Useful for testing. | `undefined` |
 | `--logLevel` | `quiet`, `info`, or `debug`. | `info` |
 | `--engine` | `browser` (recommended) or `pdf-lib` (deprecated text-only). | `browser` |
+| `--skipPageCount` | Skip parsing generated PDFs to count pages. Improves performance. | `false` |
 
 ## Advanced Topics
 

@@ -19,6 +19,7 @@ export type CompositionOptions = {
     headerTemplate?: string; // optional path to header HTML file
     footerTemplate?: string; // optional path to footer HTML file
     logLevel: "quiet" | "info" | "debug";
+    skipPageCount?: boolean;
 };
 
 export type RecordData = Record<string, any>;

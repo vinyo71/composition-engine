@@ -30,7 +30,7 @@ function parseCli(): CompositionOptions {
       ll: "logLevel",
     },
     string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "font", "streamTag", "engine", "chrome", "css", "headerTemplate", "footerTemplate", "logLevel"],
-    boolean: ["version"],
+    boolean: ["version", "skipPageCount"],
   });
 
   if (args.version) {
@@ -77,6 +77,7 @@ function parseCli(): CompositionOptions {
     headerTemplate: args.headerTemplate ? String(args.headerTemplate) : undefined,
     footerTemplate: args.footerTemplate ? String(args.footerTemplate) : undefined,
     logLevel: (args.logLevel ?? defaults.logLevel) as LogLevel,
+    skipPageCount: args.skipPageCount ? Boolean(args.skipPageCount) : false,
   };
 
   const logger = new Logger(opts.logLevel);

@@ -1,6 +1,6 @@
-export type LogLevel = "quiet" | "info" | "debug";
+export type LogLevel = "quiet" | "info" | "debug" | "warn";
 
-const LOG_LEVELS: Record<LogLevel, number> = { quiet: 0, info: 1, debug: 2 };
+const LOG_LEVELS: Record<LogLevel, number> = { quiet: 0, info: 1, warn: 1, debug: 2 };
 
 export class Logger {
   level: number;

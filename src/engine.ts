@@ -3,6 +3,7 @@ import { basename, extname, join } from "jsr:@std/path";
 import { parseXml, findRecords, streamXmlElements } from "./xml.ts";
 import { compileTemplate } from "./template.ts";
 import { createPdfDocument, renderRecordToPdf, savePdf, createBrowser, closeBrowser, htmlToPdfBytes, findChromeExecutable } from "./pdf.ts";
+import { PDFDocument } from "npm:pdf-lib@^1.17.1";
 import { Logger } from "./logger.ts";
 import { CompositionOptions } from "./types.ts";
 import { BrowserPool } from "./browser_pool.ts";
@@ -59,6 +60,7 @@ export class CompositionEngine {
         }
 
         const t_setup_end = performance.now();
+        const setupTime = t_setup_end - t_start;
 
         // Initialize Browser Pool if needed
         let pool: BrowserPool | undefined;
@@ -68,26 +70,35 @@ export class CompositionEngine {
             pool = new BrowserPool(this.opts.concurrency, chromePath, this.opts.logLevel);
         }
 
+        let result = { processed: 0, pages: 0 };
+        const t_process_start = performance.now();
+
         try {
             // Streaming Path
             if (this.opts.streamTag) {
-                await this.processStream(render, cssContent, headerTpl, footerTpl, pool);
+                result = await this.processStream(render, cssContent, headerTpl, footerTpl, pool);
             }
             // Full Load Path
             else {
-                await this.processBatch(render, cssContent, headerTpl, footerTpl, pool);
+                result = await this.processBatch(render, cssContent, headerTpl, footerTpl, pool);
             }
         } finally {
             if (pool) await pool.destroy();
         }
 
         const t_end = performance.now();
+        const processTime = t_end - t_process_start;
         const totalTime = t_end - t_start;
+        const pagesPerSec = processTime > 0 ? (result.pages / (processTime / 1000)) : 0;
 
         if (this.opts.logLevel !== "quiet") {
             this.logger.info("---");
             this.logger.info("Timing Summary");
+            this.logger.info(`Setup:      ${setupTime.toFixed(2)} ms`);
+            this.logger.info(`Processing: ${processTime.toFixed(2)} ms`);
             this.logger.info(`Total:      ${totalTime.toFixed(2)} ms`);
+            this.logger.info(`Total Pages: ${result.pages}`);
+            this.logger.info(`Throughput: ${pagesPerSec.toFixed(2)} pages/sec`);
         }
     }
 
@@ -97,10 +108,11 @@ export class CompositionEngine {
         headerTpl: string | undefined,
         footerTpl: string | undefined,
         pool?: BrowserPool
-    ) {
+    ): Promise<{ processed: number; pages: number }> {
         const { opts, logger } = this;
         const tag = opts.streamTag!;
         let index = 0;
+        let totalPages = 0;
 
         // Browser Engine (Multi Only)
         if (opts.engine === "browser" && pool) {
@@ -117,13 +129,31 @@ export class CompositionEngine {
                     const htmlFrag = render(rec);
                     const full = wrapHtmlDoc(htmlFrag);
 
+                    logger.debug(`Task ${currentIndex}: Acquiring browser`);
                     const browser = await pool.acquire();
+                    logger.debug(`Task ${currentIndex}: Browser acquired`);
                     try {
+                        logger.debug(`Task ${currentIndex}: Generating PDF`);
                         const bytes = await htmlToPdfBytes(browser as any, full, cssContent, headerTpl, footerTpl);
+                        logger.debug(`Task ${currentIndex}: PDF Generated, size: ${bytes.length}`);
+
+                        if (!opts.skipPageCount) {
+                            logger.debug(`Task ${currentIndex}: Counting pages`);
+                            const doc = await PDFDocument.load(bytes);
+                            const pages = doc.getPageCount();
+                            totalPages += pages;
+                            logger.debug(`Task ${currentIndex}: Pages counted: ${pages}`);
+                        }
+
                         const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
                         const outPath = join(opts.outDir, fileName);
+                        logger.debug(`Task ${currentIndex}: Writing file ${outPath}`);
                         await Deno.writeFile(outPath, bytes);
+                        logger.debug(`Task ${currentIndex}: File written`);
+                    } catch (err) {
+                        logger.error(`Failed to process record ${currentIndex}:`, err);
                     } finally {
+                        logger.debug(`Task ${currentIndex}: Releasing browser`);
                         pool.release(browser);
                     }
                 })();
@@ -136,7 +166,9 @@ export class CompositionEngine {
                 if (opts.limit && index >= opts.limit) break;
             }
             if (batch.length) await Promise.all(batch);
-            logger.info(`Done. Wrote ${Math.min(index, opts.limit ?? index)} PDFs to ${opts.outDir}`);
+            const count = Math.min(index, opts.limit ?? index);
+            logger.info(`Done. Wrote ${count} PDFs to ${opts.outDir}`);
+            return { processed: count, pages: totalPages };
         }
         // PDF-Lib Engine
         else {
@@ -155,7 +187,9 @@ export class CompositionEngine {
                 const base = basename(opts.input, extname(opts.input));
                 const outPath = join(opts.outDir, `${base}.pdf`);
                 await savePdf(doc, outPath);
+                totalPages = doc.getPageCount();
                 logger.info(`Wrote single PDF: ${outPath}`);
+                return { processed, pages: totalPages };
             } else {
                 // Multi
                 const batch: Promise<void>[] = [];
@@ -167,6 +201,7 @@ export class CompositionEngine {
                         const html = render(rec);
                         const doc = await createPdfDocument(opts.font);
                         await renderRecordToPdf(doc, html);
+                        totalPages += doc.getPageCount();
                         const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
                         const outPath = join(opts.outDir, fileName);
                         await savePdf(doc, outPath);
@@ -180,7 +215,9 @@ export class CompositionEngine {
                     if (opts.limit && index >= opts.limit) break;
                 }
                 if (batch.length) await Promise.all(batch);
-                logger.info(`Done. Wrote ${Math.min(index, opts.limit ?? index)} PDFs to ${opts.outDir}`);
+                const count = Math.min(index, opts.limit ?? index);
+                logger.info(`Done. Wrote ${count} PDFs to ${opts.outDir}`);
+                return { processed: count, pages: totalPages };
             }
         }
     }
@@ -191,12 +228,13 @@ export class CompositionEngine {
         headerTpl: string | undefined,
         footerTpl: string | undefined,
         pool?: BrowserPool
-    ) {
+    ): Promise<{ processed: number; pages: number }> {
         const { opts, logger } = this;
         const xmlText = await Deno.readTextFile(opts.input);
         const xmlRoot = parseXml(xmlText);
         const records = findRecords(xmlRoot, opts.recordPath);
         const total = opts.limit ? Math.min(records.length, opts.limit) : records.length;
+        let totalPages = 0;
 
         logger.info(`Records: ${records.length}${opts.limit ? ` (processing ${total})` : ""}`);
 
@@ -212,10 +250,13 @@ export class CompositionEngine {
                     }
                     const full = wrapHtmlDoc(parts.join("\n"));
                     const bytes = await htmlToPdfBytes(browser as any, full, cssContent, headerTpl, footerTpl);
+                    const doc = await PDFDocument.load(bytes);
+                    totalPages = doc.getPageCount();
                     const base = basename(opts.input, extname(opts.input));
                     const outPath = join(opts.outDir, `${base}.pdf`);
                     await Deno.writeFile(outPath, bytes);
                     logger.info(`Wrote single PDF: ${outPath}`);
+                    return { processed: total, pages: totalPages };
                 } finally {
                     pool.release(browser);
                 }
@@ -233,6 +274,12 @@ export class CompositionEngine {
                             const htmlFrag = render(rec);
                             const full = wrapHtmlDoc(htmlFrag);
                             const bytes = await htmlToPdfBytes(browser as any, full, cssContent, headerTpl, footerTpl);
+
+                            if (!opts.skipPageCount) {
+                                const doc = await PDFDocument.load(bytes);
+                                totalPages += doc.getPageCount();
+                            }
+
                             const fileName = applyOutNamePattern(opts.outName, i, rec);
                             const outPath = join(opts.outDir, fileName);
                             await Deno.writeFile(outPath, bytes);
@@ -248,6 +295,7 @@ export class CompositionEngine {
                 const workers = Array.from({ length: opts.concurrency }, (_, id) => worker(id));
                 await Promise.all(workers);
                 logger.info(`Done. Wrote ${processed} PDFs to ${opts.outDir}`);
+                return { processed, pages: totalPages };
             }
         } else {
             // pdf-lib (unchanged)
@@ -264,7 +312,9 @@ export class CompositionEngine {
                 const base = basename(opts.input, extname(opts.input));
                 const outPath = join(opts.outDir, `${base}.pdf`);
                 await savePdf(doc, outPath);
+                totalPages = doc.getPageCount();
                 logger.info(`Wrote single PDF: ${outPath}`);
+                return { processed, pages: totalPages };
             } else {
                 let nextIndex = 0;
                 let processed = 0;
@@ -276,6 +326,7 @@ export class CompositionEngine {
                         const html = render(rec);
                         const doc = await createPdfDocument(opts.font);
                         await renderRecordToPdf(doc, html);
+                        totalPages += doc.getPageCount();
                         const fileName = applyOutNamePattern(opts.outName, i, rec);
                         const outPath = join(opts.outDir, fileName);
                         await savePdf(doc, outPath);
@@ -288,7 +339,9 @@ export class CompositionEngine {
                 const workers = Array.from({ length: opts.concurrency }, (_, id) => worker(id));
                 await Promise.all(workers);
                 logger.info(`Done. Wrote ${processed} PDFs to ${opts.outDir}`);
+                return { processed, pages: totalPages };
             }
         }
     }
 }
+

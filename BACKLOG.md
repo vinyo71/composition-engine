@@ -48,7 +48,7 @@
 
 ### Deployment & Observability
 - [ ] **Executable Binary**: Compile to standalone executable.
-- [ ] **Performance Metrics**: Measure pages/sec and generation phases.
+- [x] **Performance Metrics**: Measure pages/sec and generation phases.
 - [ ] **Detailed Logging**: More granular logs.
 - [ ] **Job Statistics**: Output TXT/PDF report with generation stats.
 
@@ -87,3 +87,4 @@
 - [x] **Remove Python**: Replaced `gen_data.py` with Deno-based `src/gen_data.ts` and `src/gen_invoice_data.ts`.
 - [x] **Documentation**: Rewrote README with "Kitchen Sink" examples and clear usage guides.
 - [x] **Type Safety**: Improved TypeScript types for XML records.
+- [x] **Skip Page Count**: Added `--skip-page-count` CLI option to bypass PDF parsing for performance.

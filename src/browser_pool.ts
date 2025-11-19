@@ -6,6 +6,7 @@ export class BrowserPool {
     private active = 0;
     private waiting: ((browser: Browser) => void)[] = [];
     private logger: Logger;
+    private destroying = false;
 
     constructor(
         private maxSize: number,
@@ -48,6 +49,7 @@ export class BrowserPool {
     }
 
     async destroy() {
+        this.destroying = true;
         this.logger.info("Destroying browser pool...");
         await Promise.all(this.pool.map((b) => b.close()));
         this.pool = [];
@@ -69,6 +71,7 @@ export class BrowserPool {
 
             // Handle unexpected disconnection
             browser.on("disconnected", () => {
+                if (this.destroying) return;
                 this.logger.warn("Browser disconnected unexpectedly");
                 this.active--;
                 // Remove from pool if present
