@@ -159,15 +159,25 @@ export async function closeBrowser(browser: PuppeteerBrowser) {
 }
 
 export async function htmlToPdfBytes(
-  browser: PuppeteerBrowser,
+  browserOrPage: PuppeteerBrowser | any,
   fullHtml: string,
   cssContent = "",
   headerTemplate?: string,
   footerTemplate?: string
 ): Promise<Uint8Array> {
-  const page = await browser.newPage();
+  let page: any;
+  let shouldClose = false;
+
+  // Check if it's a Browser (has newPage) or a Page (has setContent)
+  if (typeof browserOrPage.newPage === "function") {
+    page = await browserOrPage.newPage();
+    shouldClose = true;
+  } else {
+    page = browserOrPage;
+  }
+
   try {
-    await page.setContent(fullHtml, { waitUntil: "networkidle0", timeout: 120000 });
+    await page.setContent(fullHtml, { waitUntil: "load", timeout: 30000 });
     if (cssContent) {
       await page.addStyleTag({ content: cssContent });
     }
@@ -178,11 +188,13 @@ export async function htmlToPdfBytes(
       displayHeaderFooter: !!(headerTemplate || footerTemplate),
       headerTemplate: headerTemplate || "<div></div>",
       footerTemplate: footerTemplate || "<div></div>",
-      timeout: 120000,
+      timeout: 30000,
     });
     return buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   } finally {
-    await page.close();
+    if (shouldClose) {
+      await page.close();
+    }
   }
 }
 

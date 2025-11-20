@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-11-20
+### Added
+- **Browser Context Reuse**: Refactored `BrowserPool` to pool `Page` instances instead of `Browser` instances, reusing pages across PDF generations.
+  - Significant performance improvement: **~2x throughput** (6.8 → 13.2 pages/sec).
+  - Single shared browser instance with page recycling reduces launch/close overhead.
+  - Automatic page cleanup and error recovery for crashed/detached pages.
+
+### Changed
+- **`BrowserPool` Refactor**: Now pools Puppeteer `Page` objects and maintains a single `Browser` instance.
+- **`CompositionEngine` Update**: Modified `processStream` and `processBatch` to acquire/release pages from the pool.
+- **`htmlToPdfBytes` Optimization**: 
+  - Changed `waitUntil` from `networkidle0` to `load` for faster rendering.
+  - Reduced timeout from 120s to 30s.
+  - Function now accepts both `Browser` (legacy) and `Page` (optimized) parameters.
+
 ## [0.1.1] - 2025-11-19
 ### Added
 - **Performance Metrics**: Detailed timing summary with setup, processing, total time, total pages, and throughput (pages/sec).

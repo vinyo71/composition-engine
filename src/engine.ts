@@ -129,12 +129,12 @@ export class CompositionEngine {
                     const htmlFrag = render(rec);
                     const full = wrapHtmlDoc(htmlFrag);
 
-                    logger.debug(`Task ${currentIndex}: Acquiring browser`);
-                    const browser = await pool.acquire();
-                    logger.debug(`Task ${currentIndex}: Browser acquired`);
+                    logger.debug(`Task ${currentIndex}: Acquiring page`);
+                    const page = await pool.acquire();
+                    logger.debug(`Task ${currentIndex}: Page acquired`);
                     try {
                         logger.debug(`Task ${currentIndex}: Generating PDF`);
-                        const bytes = await htmlToPdfBytes(browser as any, full, cssContent, headerTpl, footerTpl);
+                        const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
                         logger.debug(`Task ${currentIndex}: PDF Generated, size: ${bytes.length}`);
 
                         if (!opts.skipPageCount) {
@@ -153,8 +153,8 @@ export class CompositionEngine {
                     } catch (err) {
                         logger.error(`Failed to process record ${currentIndex}:`, err);
                     } finally {
-                        logger.debug(`Task ${currentIndex}: Releasing browser`);
-                        pool.release(browser);
+                        logger.debug(`Task ${currentIndex}: Releasing page`);
+                        pool.release(page);
                     }
                 })();
                 batch.push(task);
@@ -240,7 +240,7 @@ export class CompositionEngine {
 
         if (opts.engine === "browser" && pool) {
             if (opts.mode === "single") {
-                const browser = await pool.acquire();
+                const page = await pool.acquire();
                 try {
                     const parts: string[] = [];
                     for (let i = 0; i < total; i++) {
@@ -249,7 +249,7 @@ export class CompositionEngine {
                         if (i < total - 1) parts.push('<div class="page-break"></div>');
                     }
                     const full = wrapHtmlDoc(parts.join("\n"));
-                    const bytes = await htmlToPdfBytes(browser as any, full, cssContent, headerTpl, footerTpl);
+                    const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
                     const doc = await PDFDocument.load(bytes);
                     totalPages = doc.getPageCount();
                     const base = basename(opts.input, extname(opts.input));
@@ -258,7 +258,7 @@ export class CompositionEngine {
                     logger.info(`Wrote single PDF: ${outPath}`);
                     return { processed: total, pages: totalPages };
                 } finally {
-                    pool.release(browser);
+                    pool.release(page);
                 }
             } else {
                 let nextIndex = 0;
@@ -268,12 +268,12 @@ export class CompositionEngine {
                         const i = nextIndex++;
                         if (i >= total) break;
 
-                        const browser = await pool!.acquire();
+                        const page = await pool!.acquire();
                         try {
                             const rec = records[i];
                             const htmlFrag = render(rec);
                             const full = wrapHtmlDoc(htmlFrag);
-                            const bytes = await htmlToPdfBytes(browser as any, full, cssContent, headerTpl, footerTpl);
+                            const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
 
                             if (!opts.skipPageCount) {
                                 const doc = await PDFDocument.load(bytes);
@@ -288,7 +288,7 @@ export class CompositionEngine {
                         } catch (err) {
                             logger.error(`Failed to process record ${i}:`, err);
                         } finally {
-                            pool!.release(browser);
+                            pool!.release(page);
                         }
                     }
                 };

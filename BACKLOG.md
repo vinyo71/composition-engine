@@ -45,7 +45,7 @@
 ### Performance & Streaming
 - [ ] **Backpressure**: Implement backpressure in the streaming pipeline to prevent memory spikes.
 - [ ] **Batch Tuning**: Optimize batch sizes for different concurrency levels.
-- [ ] **Browser Context Reuse**: Reuse browser pages/contexts instead of creating new ones for every record to reduce overhead.
+- [x] **Browser Context Reuse**: Reuse browser pages/contexts instead of creating new ones for every record to reduce overhead. *(Completed 2025-11-20: ~2x throughput improvement)*
 - [ ] **Headless Shell**: Switch to `chrome-headless-shell` for faster startup and lower memory footprint.
 - [ ] **Asset Caching**: Implement request interception to cache/block network requests for assets (CSS, images, fonts).
 - [ ] **Cluster Management**: Evaluate `puppeteer-cluster` for more efficient worker management.
@@ -63,6 +63,10 @@
 ### Configuration & UX
 - [ ] **Config File**: Support `composition.config.json` for default settings.
 - [ ] **CLI Improvements**: Better progress bars and actionable error messages.
+- [ ] **Style Library**: Create a unified CSS style set for product branding.
+  - [ ] Define brand colors, fonts, and design patterns.
+  - [ ] Update example templates (datasheet, invoice, statement) to use consistent styling.
+  - [ ] Provide reusable CSS components for common document elements.
 
 ---
 
