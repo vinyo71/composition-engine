@@ -28,7 +28,7 @@
 
 ### Demo Content & Collateral
 - [ ] **Real-World Bank Statement**: Create realistic data and template.
-- [ ] **Product Data Sheet**: Create a template with features, requirements, and intro.
+- [x] **Product Data Sheet**: Create a template with features, requirements, and intro.
 
 ---
 
@@ -45,6 +45,14 @@
 ### Performance & Streaming
 - [ ] **Backpressure**: Implement backpressure in the streaming pipeline to prevent memory spikes.
 - [ ] **Batch Tuning**: Optimize batch sizes for different concurrency levels.
+- [ ] **Browser Context Reuse**: Reuse browser pages/contexts instead of creating new ones for every record to reduce overhead.
+- [ ] **Headless Shell**: Switch to `chrome-headless-shell` for faster startup and lower memory footprint.
+- [ ] **Asset Caching**: Implement request interception to cache/block network requests for assets (CSS, images, fonts).
+- [ ] **Cluster Management**: Evaluate `puppeteer-cluster` for more efficient worker management.
+- [ ] **Server Benchmarking**: Measure performance on a server environment with varying levels of concurrency to validate vertical scaling.
+- [ ] **Complex Benchmark Suite**: Create a "Stress Test" scenario with:
+  - [ ] **Heavy Template**: Multi-page invoice with charts, images, and complex conditional logic.
+  - [ ] **Real-World Data**: Dataset with variable record sizes (1-50 pages per record) to test streaming stability.
 
 ### Deployment & Observability
 - [ ] **Executable Binary**: Compile to standalone executable.
