@@ -13,3 +13,4 @@ node_modules/
 # input and outputs
 out/
 inp/
+!inp/datasheet.xml
