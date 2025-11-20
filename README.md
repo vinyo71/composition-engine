@@ -18,7 +18,7 @@ The Composition Engine bridges the gap between raw data (XML) and professional d
 
 ## Requirements
 
-*   **Deno**: [Install Deno](https://deno.land/#installation)
+*   **Deno**: [Install Deno](https://deno.land/#installation) (v2.5 or later)
 *   **Chrome/Edge**: A local installation of Google Chrome, Chromium, or Microsoft Edge.
 
 ## Quick Start

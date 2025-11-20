@@ -14,5 +14,5 @@ node_modules/
 out/*
 inp/
 !inp/datasheet.xml
-!out/datasheet/
+!out/datasheet.pdf
 
