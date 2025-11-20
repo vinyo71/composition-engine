@@ -11,6 +11,8 @@ deno.lock
 node_modules/
 
 # input and outputs
-out/
+out/*
 inp/
 !inp/datasheet.xml
+!out/datasheet/
+
