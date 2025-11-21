@@ -1,5 +1,5 @@
 
-import { parseXml, findRecords } from "./src/xml.ts";
+import { parseXml, findRecords } from "../src/utils/xml.ts";
 
 const xmlText = await Deno.readTextFile("inp/datasheet.xml");
 const root = parseXml(xmlText);

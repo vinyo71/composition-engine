@@ -1,6 +1,6 @@
 # Composition Engine
 
-![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
 
 **High-performance, high-fidelity document generation at scale.**
 
@@ -89,7 +89,7 @@ deno task compose `
   --recordPath Invoices.InvoiceRecord `
   --headerTemplate ./templates/header.html `
   --footerTemplate ./templates/footer.html `
-  --css ./assets/invoice.css `
+  --css ./templates/assets/invoice.css `
   --logLevel debug `
   --limit 50
 ```

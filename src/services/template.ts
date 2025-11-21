@@ -23,7 +23,7 @@ Handlebars.registerHelper("formatDate", (value: any, pattern: any) => {
   return new Intl.DateTimeFormat("hu-HU", { dateStyle: "medium" }).format(date);
 });
 
-Handlebars.registerHelper("formatNumber", (value: any, decimals: any) => {
+Handlebars.registerHelper("formatNumber", (value: any, decimals: any, locale: any) => {
   const num = Number(value);
   if (isNaN(num)) return value;
   const opts: Intl.NumberFormatOptions = { style: "decimal" };
@@ -31,8 +31,8 @@ Handlebars.registerHelper("formatNumber", (value: any, decimals: any) => {
     opts.minimumFractionDigits = decimals;
     opts.maximumFractionDigits = decimals;
   }
-  // Use Hungarian locale for space separators
-  return new Intl.NumberFormat("hu-HU", opts).format(num);
+  const loc = typeof locale === "string" ? locale : "hu-HU";
+  return new Intl.NumberFormat(loc, opts).format(num);
 });
 
 Handlebars.registerHelper("multiply", (a: any, b: any) => Number(a) * Number(b));

@@ -1,12 +1,12 @@
 import { ensureDir } from "jsr:@std/fs/ensure-dir";
 import { basename, extname, join } from "jsr:@std/path";
-import { parseXml, findRecords, streamXmlElements } from "./xml.ts";
-import { compileTemplate } from "./template.ts";
-import { createPdfDocument, renderRecordToPdf, savePdf, createBrowser, closeBrowser, htmlToPdfBytes, findChromeExecutable } from "./pdf.ts";
+import { parseXml, findRecords, streamXmlElements } from "../utils/xml.ts";
+import { compileTemplate } from "../services/template.ts";
+import { createPdfDocument, renderRecordToPdf, savePdf, createBrowser, closeBrowser, htmlToPdfBytes, findChromeExecutable } from "../services/pdf.ts";
 import { PDFDocument } from "npm:pdf-lib@^1.17.1";
-import { Logger } from "./logger.ts";
-import { CompositionOptions } from "./types.ts";
-import { BrowserPool } from "./browser_pool.ts";
+import { Logger } from "../utils/logger.ts";
+import { CompositionOptions } from "../types.ts";
+import { BrowserPool } from "../services/browser_pool.ts";
 
 // Helper to wrap HTML body
 function wrapHtmlDoc(body: string, extraCss = ""): string {
@@ -29,6 +29,10 @@ function applyOutNamePattern(pattern: string, index: number, record: unknown): s
     return name;
 }
 
+/**
+ * The main engine class responsible for orchestrating the PDF generation process.
+ * It handles configuration, data loading, template rendering, and PDF output.
+ */
 export class CompositionEngine {
     private logger: Logger;
 
@@ -36,6 +40,10 @@ export class CompositionEngine {
         this.logger = new Logger(opts.logLevel);
     }
 
+    /**
+     * Starts the composition process based on the provided options.
+     * Supports both streaming and batch processing modes.
+     */
     async process() {
         const t_start = performance.now();
         await ensureDir(this.opts.outDir);

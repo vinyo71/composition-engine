@@ -1,5 +1,5 @@
 import { launch, Browser, Page } from "npm:puppeteer";
-import { Logger } from "./logger.ts";
+import { Logger } from "../utils/logger.ts";
 
 export class BrowserPool {
     private browser: Browser | null = null;

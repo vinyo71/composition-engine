@@ -18,8 +18,10 @@ export type CompositionOptions = {
     css?: string; // optional path to a CSS file to inject into the HTML
     headerTemplate?: string; // optional path to header HTML file
     footerTemplate?: string; // optional path to footer HTML file
-    logLevel: "quiet" | "info" | "debug";
+    logLevel: LogLevel;
     skipPageCount?: boolean;
 };
+
+export type LogLevel = "quiet" | "info" | "debug" | "warn";
 
 export type RecordData = Record<string, any>;

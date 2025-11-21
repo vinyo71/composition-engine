@@ -36,6 +36,7 @@
 *Goal: Make the engine reliable, testable, and easy to operate in production.*
 
 ### Quality & Testing
+- [ ] **CI/CD Pipeline**: Set up GitHub Actions to run tests and linting on every push.
 - [ ] **Unit Tests**:
   - [ ] `xml.ts`: Verify `streamXmlElements` handles chunk boundaries correctly.
   - [ ] `template.ts`: Verify Handlebars helpers and logic.
@@ -100,3 +101,8 @@
 - [x] **Documentation**: Rewrote README with "Kitchen Sink" examples and clear usage guides.
 - [x] **Type Safety**: Improved TypeScript types for XML records.
 - [x] **Skip Page Count**: Added `--skip-page-count` CLI option to bypass PDF parsing for performance.
+- [x] **Project Restructuring**:
+  - [x] Modularized source code into `core`, `services`, `generators`, and `utils`.
+  - [x] Created dedicated `debug`, `tests`, and `templates/assets` directories.
+  - [x] Implemented `config.ts` for centralized configuration.
+  - [x] Added unit tests for core engine logic.

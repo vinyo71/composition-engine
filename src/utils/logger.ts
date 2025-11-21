@@ -1,4 +1,4 @@
-export type LogLevel = "quiet" | "info" | "debug" | "warn";
+import { LogLevel } from "../types.ts";
 
 const LOG_LEVELS: Record<LogLevel, number> = { quiet: 0, info: 1, warn: 1, debug: 2 };
 

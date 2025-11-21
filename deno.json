@@ -4,9 +4,9 @@
     "compose": "deno run -A src/cli.ts",
     "dev": "deno run -A --watch=src src/cli.ts",
     "dev:nocheck": "deno run -A --no-check --watch=src src/cli.ts",
-    "gen_data": "deno run -A src/gen_data.ts",
-    "gen_invoices": "deno run -A src/gen_invoice_data.ts",
-    "gen_mvm": "deno run -A src/gen_mvm_data.ts",
+    "gen_data": "deno run -A src/generators/gen_data.ts",
+    "gen_invoices": "deno run -A src/generators/gen_invoice_data.ts",
+    "gen_mvm": "deno run -A src/generators/gen_mvm_data.ts",
     "gen_datasheet": "deno task compose --input ./inp/datasheet.xml --template ./templates/datasheet.html --outDir ./out --mode single --recordPath . --outName datasheet.pdf"
   },
   "imports": {

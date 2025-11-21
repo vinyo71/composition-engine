@@ -1,4 +1,4 @@
-import { compileTemplate } from "./src/template.ts";
+import { compileTemplate } from "../src/services/template.ts";
 
 const template = `
 Hello {{Customer.Name}}!
