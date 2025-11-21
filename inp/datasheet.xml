@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Datasheet>
+  <Product>
+    <Name>Composition Engine</Name>
+    <Version>0.3.0</Version>
+    <Tagline>Turn Data into Documents.</Tagline>
+    <Subtitle>Fast. Scalable. Just HTML & CSS.</Subtitle>
+  </Product>
+  <Intro>
+    The Composition Engine bridges the gap between raw data (XML) and professional documents (PDF). It is designed to process massive datasets efficiently, producing pixel-perfect documents using HTML templates and headless browser rendering. Stop fighting with archaic formats like XSL-FO or proprietary tools. Build your invoices, statements, and reports using the web technologies you already know.
+  </Intro>
+  <Features>
+    <Feature>
+      <Title>High Fidelity Rendering</Title>
+      <Description>Uses a headless browser (Puppeteer) to render full HTML/CSS, ensuring your PDFs look exactly like your web templates. What you see is what you get.</Description>
+    </Feature>
+    <Feature>
+      <Title>Handlebars Templates</Title>
+      <Description>Full support for logic ({{#if}}, {{#each}}) and formatting helpers (formatCurrency, formatDate) to handle complex data requirements.</Description>
+    </Feature>
+    <Feature>
+      <Title>Scalable Streaming</Title>
+      <Description>Processes gigabyte-sized XML files with millions of records without loading the entire file into memory. Flat memory usage regardless of input size.</Description>
+    </Feature>
+    <Feature>
+      <Title>Flexible Output Modes</Title>
+      <Description>Generate individual PDF files for each record (Multi Mode) or combine all records into a single giant PDF (Single Mode).</Description>
+    </Feature>
+    <Feature>
+      <Title>High Concurrency</Title>
+      <Description>Parallel processing maximizes CPU usage and throughput by utilizing a robust pool of browser instances.</Description>
+    </Feature>
+  </Features>
+  <Requirements>
+    <Requirement>Deno Runtime (v2.5 or later)</Requirement>
+    <Requirement>Google Chrome, Chromium, or Microsoft Edge</Requirement>
+    <Requirement>Windows, macOS, or Linux</Requirement>
+    <Requirement>Multi-core Processor (2+ cores, 4+ recommended)</Requirement>
+    <Requirement>Minimum 4GB RAM (8GB recommended for high concurrency)</Requirement>
+  </Requirements>
+  <Pricing>
+    <Tier>
+      <Name>Developer</Name>
+      <Price>Free</Price>
+      <Description>Open Source (MIT License). Perfect for local development and small projects.</Description>
+    </Tier>
+    <Tier>
+      <Name>Enterprise</Name>
+      <Price>Contact Us</Price>
+      <Description>Dedicated support, SLA, and custom integration services.</Description>
+    </Tier>
+  </Pricing>
+  <Contact>
+    <Website>https://github.com/vinyo71/composition-engine</Website>
+    <Email>contact@composition-engine.com</Email>
+  </Contact>
+</Datasheet>

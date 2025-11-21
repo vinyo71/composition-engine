@@ -12,7 +12,7 @@ node_modules/
 
 # input and outputs
 out/*
-inp/
+inp/*
 !inp/datasheet.xml
 !out/datasheet.pdf
 
