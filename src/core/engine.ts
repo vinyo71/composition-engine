@@ -162,7 +162,7 @@ export class CompositionEngine {
                         logger.error(`Failed to process record ${currentIndex}:`, err);
                     } finally {
                         logger.debug(`Task ${currentIndex}: Releasing page`);
-                        pool.release(page);
+                        await pool.release(page);
                     }
                 })();
                 batch.push(task);
@@ -266,7 +266,7 @@ export class CompositionEngine {
                     logger.info(`Wrote single PDF: ${outPath}`);
                     return { processed: total, pages: totalPages };
                 } finally {
-                    pool.release(page);
+                    await pool.release(page);
                 }
             } else {
                 let nextIndex = 0;
@@ -296,7 +296,7 @@ export class CompositionEngine {
                         } catch (err) {
                             logger.error(`Failed to process record ${i}:`, err);
                         } finally {
-                            pool!.release(page);
+                            await pool!.release(page);
                         }
                     }
                 };
