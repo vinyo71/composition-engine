@@ -14,13 +14,9 @@ The Composition Engine bridges the gap between raw data (XML) and professional d
 *   **Flexible Output**:
     *   **Multi Mode**: Generates individual PDF files for each record (e.g., for emailing).
     *   **Single Mode**: Combines all records into a single PDF (e.g., for archival or print).
-*   **Dynamic Charts**: Renders charts (bar, line, pie, etc.) using Chart.js directly in the PDF.
-*   **Concurrency**: Parallel processing to maximize CPU usage and throughput.
-
-## Requirements
-
-*   **Deno**: [Install Deno](https://deno.land/#installation) (v2.5 or later)
-*   **Chrome/Edge**: A local installation of Google Chrome, Chromium, or Microsoft Edge.
+*   **Dynamic Charts**: Embed data-driven charts using Chart.js.
+*   **Asset Management**: Automatic handling of relative paths for images and fonts in templates.
+*   **High Concurrency**: Parallel processing to maximize CPU usage and throughput.
 
 ## Quick Start
 

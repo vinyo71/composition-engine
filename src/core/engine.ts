@@ -1,5 +1,5 @@
 import { ensureDir } from "jsr:@std/fs/ensure-dir";
-import { basename, extname, join } from "jsr:@std/path";
+import { basename, extname, join, dirname, toFileUrl } from "jsr:@std/path";
 import { parseXml, findRecords, streamXmlElements } from "../utils/xml.ts";
 import { compileTemplate } from "../services/template.ts";
 import { createPdfDocument, renderRecordToPdf, savePdf, createBrowser, closeBrowser, htmlToPdfBytes, findChromeExecutable } from "../services/pdf.ts";
@@ -9,8 +9,10 @@ import { CompositionOptions } from "../types.ts";
 import { BrowserPool } from "../services/browser_pool.ts";
 
 // Helper to wrap HTML body
-function wrapHtmlDoc(body: string, extraCss = ""): string {
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+function wrapHtmlDoc(body: string, baseUrl: string, extraCss = ""): string {
+    return `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <base href="${baseUrl}">
+    <style>
     @page { size: A4; margin: 20mm 15mm; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
     .page-break { page-break-after: always; }
@@ -57,6 +59,12 @@ export class CompositionEngine {
         const templateText = await Deno.readTextFile(this.opts.template);
         const render = compileTemplate(templateText);
 
+        // Determine base URL for assets
+        const templateDir = dirname(this.opts.template);
+        // Ensure absolute path for toFileUrl
+        const absTemplateDir = await Deno.realPath(templateDir);
+        const baseUrl = toFileUrl(absTemplateDir).href + "/";
+
         // Load header/footer if present
         let headerTpl: string | undefined;
         let footerTpl: string | undefined;
@@ -84,11 +92,11 @@ export class CompositionEngine {
         try {
             // Streaming Path
             if (this.opts.streamTag) {
-                result = await this.processStream(render, cssContent, headerTpl, footerTpl, pool);
+                result = await this.processStream(render, baseUrl, cssContent, headerTpl, footerTpl, pool);
             }
             // Full Load Path
             else {
-                result = await this.processBatch(render, cssContent, headerTpl, footerTpl, pool);
+                result = await this.processBatch(render, baseUrl, cssContent, headerTpl, footerTpl, pool);
             }
         } finally {
             if (pool) await pool.destroy();
@@ -112,6 +120,7 @@ export class CompositionEngine {
 
     private async processStream(
         render: (data: any) => string,
+        baseUrl: string,
         cssContent: string,
         headerTpl: string | undefined,
         footerTpl: string | undefined,
@@ -135,7 +144,7 @@ export class CompositionEngine {
                     const node = parseXml(xmlChunk);
                     const rec = node?.[tag] ?? node;
                     const htmlFrag = render(rec);
-                    const full = wrapHtmlDoc(htmlFrag);
+                    const full = wrapHtmlDoc(htmlFrag, baseUrl);
 
                     logger.debug(`Task ${currentIndex}: Acquiring page`);
                     const page = await pool.acquire();
@@ -232,6 +241,7 @@ export class CompositionEngine {
 
     private async processBatch(
         render: (data: any) => string,
+        baseUrl: string,
         cssContent: string,
         headerTpl: string | undefined,
         footerTpl: string | undefined,
@@ -256,7 +266,7 @@ export class CompositionEngine {
                         parts.push(render(rec));
                         if (i < total - 1) parts.push('<div class="page-break"></div>');
                     }
-                    const full = wrapHtmlDoc(parts.join("\n"));
+                    const full = wrapHtmlDoc(parts.join("\n"), baseUrl);
                     const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
                     const doc = await PDFDocument.load(bytes);
                     totalPages = doc.getPageCount();
@@ -280,7 +290,7 @@ export class CompositionEngine {
                         try {
                             const rec = records[i];
                             const htmlFrag = render(rec);
-                            const full = wrapHtmlDoc(htmlFrag);
+                            const full = wrapHtmlDoc(htmlFrag, baseUrl);
                             const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
 
                             if (!opts.skipPageCount) {

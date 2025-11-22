@@ -12,6 +12,7 @@
     -   `README.md`
     -   `datasheet.pdf` (if needed)
     -   `AI_RULES.md` (if rules change)
+    -   `deno.json` (if needed)
 2.  **Verify Output**: Never assume a code change worked. Run the code, check the output (e.g., generated PDF page count), and only then report success.
 3.  **Tech Stack**:
     -   Runtime: Deno (latest stable)

@@ -5,19 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.0] - 2025-11-21
+## [0.3.0] - 2025-11-22
 ### Added
+- **Asset Management**: Support for relative paths in templates (images, fonts) via automatic `<base>` tag injection.
+- **Dynamic Charts**: Integrated Chart.js support for data-driven charts in PDFs.
 - **Project Restructuring**: Created dedicated directories for `debug/`, `tests/`, and `templates/assets/`.
 - **Modular Architecture**: Split `src/` into `core/`, `services/`, `generators/`, and `utils/`.
 - **Configuration Module**: Added `src/config.ts` for centralized configuration management.
 - **Unit Tests**: Added `tests/engine_test.ts` with initial tests for XML parsing and template rendering.
-- **CI/CD**: Added CI/CD pipeline task to Backlog.
-- **Dynamic Charts**: Implemented dynamic charting using Chart.js and Handlebars.
 
 ### Changed
 - **Refactor**: Moved all source files to their respective modules and updated imports.
 - **CLI**: Refactored `src/cli.ts` to use the new configuration module.
 - **Assets**: Moved CSS assets to `templates/assets/`.
+- **Version Bump**: Updated to 0.3.0 in `deno.json` and `datasheet.xml`.
 
 ## [0.2.0] - 2025-11-20
 ### Added
