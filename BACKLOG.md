@@ -23,8 +23,8 @@
   - [x] Support "Page X of Y" placeholders.
 - [x] **Dynamic Charts**:
   - [x] Integrate a charting library (e.g., Chart.js or QuickChart) to render graphs in the PDF (e.g., "Spending Breakdown").
-- [ ] **Asset Management**:
-  - [ ] Ensure relative paths for images (logos) and fonts work correctly in the rendered PDF.
+- [x] **Asset Management**:
+  - [x] Ensure relative paths for images (logos) and fonts work correctly in the rendered PDF.
 
 ### Demo Content & Collateral
 - [ ] **Real-World Bank Statement**: Create realistic data and template.
