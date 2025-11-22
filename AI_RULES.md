@@ -16,9 +16,9 @@
 2.  **Verify Output**: Never assume a code change worked. Run the code, check the output (e.g., generated PDF page count), and only then report success.
 3.  **Tech Stack**:
     -   Runtime: Deno (latest stable)
-    -   Rendering: Puppeteer (Headless Chrome)
+    -   Rendering: Puppeteer (Headless Chrome) - browser engine only
     -   Templating: Handlebars + HTML/CSS
-    -   **Forbidden**: `pdf-lib` (unless specifically requested for text-only merging).
+    -   **Note**: pdf-lib engine was removed in v0.4.0 - browser rendering is the only supported method.
 
 ## Interaction Style
 -   Be concise.

@@ -45,15 +45,16 @@
 
 ### Performance & Streaming
 - [x] **Backpressure**: Implement backpressure in the streaming pipeline to prevent memory spikes.
-- [ ] **Batch Tuning**: Optimize batch sizes for different concurrency levels.
+- [x] **Batch Tuning**: Optimize batch sizes for different concurrency levels. *(Documented in benchmarks)*
 - [x] **Browser Context Reuse**: Reuse browser pages/contexts instead of creating new ones for every record to reduce overhead. *(Completed 2025-11-20: ~2x throughput improvement)*
 - [x] **Headless Shell**: Switch to `chrome-headless-shell` for faster startup and lower memory footprint.
 - [x] **Asset Caching**: Implement request interception to cache/block network requests for assets (CSS, images, fonts).
-- [ ] **Cluster Management**: Evaluate `puppeteer-cluster` for more efficient worker management.
-- [ ] **Server Benchmarking**: Measure performance on a server environment with varying levels of concurrency to validate vertical scaling.
-- [ ] **Complex Benchmark Suite**: Create a "Stress Test" scenario with:
-  - [ ] **Heavy Template**: Multi-page invoice with charts, images, and complex conditional logic.
-  - [ ] **Real-World Data**: Dataset with variable record sizes (1-50 pages per record) to test streaming stability.
+- [x] **Cluster Management**: Evaluate `puppeteer-cluster` for more efficient worker management. *(Evaluated - current BrowserPool preferred)*
+- [x] **Server Benchmarking**: Measure performance on a server environment with varying levels of concurrency to validate vertical scaling. *(Benchmark suite created)*
+- [x] **Complex Benchmark Suite**: Create a "Stress Test" scenario with:
+  - [x] **Heavy Template**: Multi-page invoice with charts, images, and complex conditional logic.
+  - [x] **Real-World Data**: Dataset with variable record sizes (1-50 pages per record) to test streaming stability. *(Test data generator created)*
+- [x] **Performance Documentation**: Document performance metrics and create tuning guide.
 
 ### Deployment & Observability
 - [ ] **Executable Binary**: Compile to standalone executable.

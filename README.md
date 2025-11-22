@@ -125,3 +125,30 @@ The engine provides a detailed timing summary at the end of execution.
 ### Troubleshooting
 *   **"Failed to find chrome executable"**: Ensure Chrome is installed or provide the path via `--chrome`.
 *   **"Buffer exceeds maximum length"**: You are trying to load a huge XML file into memory. Use `--streamTag` to switch to streaming mode.
+
+## Performance
+
+The Composition Engine is optimized for high-throughput PDF generation:
+
+- **Throughput:** 10-14 pages/sec (typical templates)
+- **Concurrency:** Automatically tuned to CPU cores
+- **Memory:** Bounded with backpressure control
+- **Optimizations:** Chrome headless shell, asset caching, streaming mode
+
+**Performance Resources:**
+- 📖 [Performance Tuning Guide](docs/PERFORMANCE.md) - Optimization tips and best practices
+- 📊 [Performance Metrics](docs/METRICS.md) - Baseline measurements and benchmarks
+- 🔬 [Benchmark Suite](benchmark/) - Systematic performance testing
+
+**Quick wins:**
+```bash
+# 30-40% faster - skip page counting
+deno task compose --input data.xml --template tpl.html --outDir ./out --skipPageCount
+
+# Lower memory - use streaming for large files
+deno task compose --input data.xml --template tpl.html --outDir ./out --streamTag Record
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request or open an issue for discussion.
