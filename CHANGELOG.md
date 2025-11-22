@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-11-22
+### Added
+- **Backpressure Control**: Implemented semaphore-based backpressure in streaming pipeline to prevent memory spikes during high-volume processing.
+  - Limits in-flight tasks to `concurrency * 2` to keep pipeline full without unbounded queuing
+  - Added `Semaphore` utility class (`src/utils/semaphore.ts`)
+- **Asset Caching**: Implemented Puppeteer request interception to cache static assets (images, fonts, stylesheets).
+  - 50MB configurable cache with automatic eviction
+  - Cache hit/miss statistics tracking 
+  - New `AssetCache` class (`src/services/asset_cache.ts`)
+- **Headless Shell Support**: Auto-detection of `chrome-headless-shell` for faster startup and lower memory footprint.
+  - Prioritizes headless shell over full Chrome with automatic fallback
+  - Platform-specific executable path detection (Windows, macOS, Linux)
+
+### Changed
+- **Browser Engine Only**: Removed deprecated `pdf-lib` engine completely (~280 lines).
+  - Removed `--engine` CLI option (browser is now the only option)
+  - Removed all pdf-lib rendering functions from `pdf.ts`
+  - Simplified `engine.ts` by removing conditional engine logic
+  - PDFDocument now imported dynamically only for page counting when needed
+
+### Performance
+- Baseline throughput maintained: ~8-10 pages/sec
+- Memory usage optimized with backpressure and headless shell
+- Faster browser startup with chrome-headless-shell
+
 ## [0.3.1] - 2025-11-22
 ### Added
 - **Real-World Bank Statement**: Enhanced bank statement template and data generator based on professional Hungarian bank statement formats.

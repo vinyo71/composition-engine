@@ -1,6 +1,6 @@
 # Composition Engine
 
-![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)
+![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)
 
 **High-performance, high-fidelity document generation at scale.**
 
@@ -11,12 +11,15 @@ The Composition Engine bridges the gap between raw data (XML) and professional d
 *   **High Fidelity**: Uses a headless browser (Puppeteer) to render full HTML/CSS, ensuring your PDFs look exactly like your web templates.
 *   **Handlebars Templates**: Full support for logic (`{{#if}}`, `{{#each}}`) and formatting helpers (`formatCurrency`, `formatDate`).
 *   **Scalable Streaming**: Processes gigabyte-sized XML files with millions of records without loading the entire file into memory.
+    *   **Backpressure Control**: Prevents memory spikes with semaphore-based flow control
+    *   **Asset Caching**: Caches images, fonts, and stylesheets to reduce redundant network requests
 *   **Flexible Output**:
     *   **Multi Mode**: Generates individual PDF files for each record (e.g., for emailing).
     *   **Single Mode**: Combines all records into a single PDF (e.g., for archival or print).
 *   **Dynamic Charts**: Embed data-driven charts using Chart.js.
 *   **Asset Management**: Automatic handling of relative paths for images and fonts in templates.
-*   **High Concurrency**: Parallel processing to maximize CPU usage and throughput.
+*   **High Concurrency**: Parallel processing to maximize CPU usage and throughput (~8-10 pages/sec).
+*   **Optimized Performance**: Chrome headless shell support for faster startup and lower memory footprint.
 
 ## Quick Start
 

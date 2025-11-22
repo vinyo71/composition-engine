@@ -44,11 +44,11 @@
   - [ ] End-to-end test with a "Golden Master" PDF comparison.
 
 ### Performance & Streaming
-- [ ] **Backpressure**: Implement backpressure in the streaming pipeline to prevent memory spikes.
+- [x] **Backpressure**: Implement backpressure in the streaming pipeline to prevent memory spikes.
 - [ ] **Batch Tuning**: Optimize batch sizes for different concurrency levels.
 - [x] **Browser Context Reuse**: Reuse browser pages/contexts instead of creating new ones for every record to reduce overhead. *(Completed 2025-11-20: ~2x throughput improvement)*
-- [ ] **Headless Shell**: Switch to `chrome-headless-shell` for faster startup and lower memory footprint.
-- [ ] **Asset Caching**: Implement request interception to cache/block network requests for assets (CSS, images, fonts).
+- [x] **Headless Shell**: Switch to `chrome-headless-shell` for faster startup and lower memory footprint.
+- [x] **Asset Caching**: Implement request interception to cache/block network requests for assets (CSS, images, fonts).
 - [ ] **Cluster Management**: Evaluate `puppeteer-cluster` for more efficient worker management.
 - [ ] **Server Benchmarking**: Measure performance on a server environment with varying levels of concurrency to validate vertical scaling.
 - [ ] **Complex Benchmark Suite**: Create a "Stress Test" scenario with:

@@ -1,5 +1,5 @@
 import { parseArgs } from "jsr:@std/cli/parse-args";
-import { CompositionOptions, Mode, Engine, LogLevel } from "./types.ts";
+import { CompositionOptions, Mode, LogLevel } from "./types.ts";
 import { Logger } from "./utils/logger.ts";
 
 export function getDefaultOptions(): Partial<CompositionOptions> {
@@ -8,7 +8,6 @@ export function getDefaultOptions(): Partial<CompositionOptions> {
         format: "pdf",
         mode: "multi",
         concurrency: Math.max(1, (globalThis as any).navigator?.hardwareConcurrency ?? 4),
-        engine: "browser",
         logLevel: "info",
     };
 }
@@ -25,10 +24,9 @@ export function parseConfig(args: string[]): CompositionOptions {
             r: "recordPath",
             c: "concurrency",
             l: "limit",
-            e: "engine",
             ll: "logLevel",
         },
-        string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "font", "streamTag", "engine", "chrome", "css", "headerTemplate", "footerTemplate", "logLevel"],
+        string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "streamTag", "chrome", "css", "headerTemplate", "footerTemplate", "logLevel"],
         boolean: ["version", "skipPageCount"],
     });
 
@@ -68,9 +66,7 @@ export function parseConfig(args: string[]): CompositionOptions {
         recordPath: parsed.recordPath ? String(parsed.recordPath) : undefined,
         concurrency: parsed.concurrency ? Number(parsed.concurrency) : defaults.concurrency!,
         limit: parsed.limit ? Number(parsed.limit) : undefined,
-        font: parsed.font ? String(parsed.font) : undefined,
         streamTag: parsed.streamTag ? String(parsed.streamTag) : undefined,
-        engine: (parsed.engine ?? defaults.engine) as Engine,
         chrome: parsed.chrome ? String(parsed.chrome) : undefined,
         css: parsed.css ? String(parsed.css) : undefined,
         headerTemplate: parsed.headerTemplate ? String(parsed.headerTemplate) : undefined,
@@ -94,16 +90,9 @@ function validateOptions(opts: CompositionOptions) {
         logger.error(`Unsupported --mode=${opts.mode}. Use 'single' or 'multi'.`);
         Deno.exit(2);
     }
-    if (opts.engine !== "pdf-lib" && opts.engine !== "browser") {
-        logger.error(`Unsupported --engine=${opts.engine}. Use 'pdf-lib' or 'browser'.`);
-        Deno.exit(2);
-    }
     if (opts.logLevel !== "quiet" && opts.logLevel !== "info" && opts.logLevel !== "debug") {
         logger.error(`Unsupported --logLevel=${opts.logLevel}. Use 'quiet', 'info', or 'debug'.`);
         Deno.exit(2);
-    }
-    if (opts.engine === "pdf-lib") {
-        logger.warn("Warning: --engine=pdf-lib is deprecated and will be removed in a future version. The default is now 'browser'.");
     }
     if (!Number.isFinite(opts.concurrency) || opts.concurrency < 1) {
         logger.error(`Invalid --concurrency value.`);

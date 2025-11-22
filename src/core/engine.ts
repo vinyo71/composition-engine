@@ -2,11 +2,11 @@ import { ensureDir } from "jsr:@std/fs/ensure-dir";
 import { basename, extname, join, dirname, toFileUrl } from "jsr:@std/path";
 import { parseXml, findRecords, streamXmlElements } from "../utils/xml.ts";
 import { compileTemplate } from "../services/template.ts";
-import { createPdfDocument, renderRecordToPdf, savePdf, createBrowser, closeBrowser, htmlToPdfBytes, findChromeExecutable } from "../services/pdf.ts";
-import { PDFDocument } from "npm:pdf-lib@^1.17.1";
+import { createBrowser, closeBrowser, htmlToPdfBytes, findChromeExecutable } from "../services/pdf.ts";
 import { Logger } from "../utils/logger.ts";
 import { CompositionOptions } from "../types.ts";
 import { BrowserPool } from "../services/browser_pool.ts";
+import { Semaphore } from "../utils/semaphore.ts";
 
 // Helper to wrap HTML body
 function wrapHtmlDoc(body: string, baseUrl: string, extraCss = ""): string {
@@ -22,18 +22,19 @@ function wrapHtmlDoc(body: string, baseUrl: string, extraCss = ""): string {
 
 function applyOutNamePattern(pattern: string, index: number, record: unknown): string {
     const safeIndex = String(index);
-    let name = pattern.replaceAll("{index}", safeIndex);
-    const id = (record as any)?.id ?? (record as any)?.Id ?? (record as any)?.ID ?? null;
-    if (id != null) {
-        name = name.replaceAll("{id}", String(id));
+    let out = pattern.replace(/{index}/g, safeIndex);
+    if (typeof record === "object" && record !== null) {
+        for (const [key, val] of Object.entries(record)) {
+            const placeholder = new RegExp(`\\{${key}\\}`, "g");
+            out = out.replace(placeholder, String(val ?? ""));
+        }
     }
-    if (!extname(name)) name += ".pdf";
-    return name;
+    return out;
 }
 
 /**
- * The main engine class responsible for orchestrating the PDF generation process.
- * It handles configuration, data loading, template rendering, and PDF output.
+ * CompositionEngine orchestrates the PDF generation pipeline.
+ * Supports both streaming and batch processing modes with browser-based rendering.
  */
 export class CompositionEngine {
     private logger: Logger;
@@ -44,7 +45,7 @@ export class CompositionEngine {
 
     /**
      * Starts the composition process based on the provided options.
-     * Supports both streaming and batch processing modes.
+     * Supports both streaming and batch processing modes using browser engine.
      */
     async process() {
         const t_start = performance.now();
@@ -78,13 +79,9 @@ export class CompositionEngine {
         const t_setup_end = performance.now();
         const setupTime = t_setup_end - t_start;
 
-        // Initialize Browser Pool if needed
-        let pool: BrowserPool | undefined;
-        if (this.opts.engine === "browser") {
-            const chromePath = this.opts.chrome || await findChromeExecutable();
-            // Limit pool size to concurrency to avoid overloading
-            pool = new BrowserPool(this.opts.concurrency, chromePath, this.opts.logLevel);
-        }
+        // Initialize Browser Pool
+        const chromePath = this.opts.chrome || await findChromeExecutable();
+        const pool = new BrowserPool(this.opts.concurrency, chromePath, this.opts.logLevel);
 
         let result = { processed: 0, pages: 0 };
         const t_process_start = performance.now();
@@ -99,7 +96,7 @@ export class CompositionEngine {
                 result = await this.processBatch(render, baseUrl, cssContent, headerTpl, footerTpl, pool);
             }
         } finally {
-            if (pool) await pool.destroy();
+            await pool.destroy();
         }
 
         const t_end = performance.now();
@@ -124,23 +121,30 @@ export class CompositionEngine {
         cssContent: string,
         headerTpl: string | undefined,
         footerTpl: string | undefined,
-        pool?: BrowserPool
+        pool: BrowserPool
     ): Promise<{ processed: number; pages: number }> {
         const { opts, logger } = this;
         const tag = opts.streamTag!;
         let index = 0;
         let totalPages = 0;
 
-        // Browser Engine (Multi Only)
-        if (opts.engine === "browser" && pool) {
-            if (opts.mode === "single") {
-                throw new Error("Streaming + --engine=browser with --mode=single is not supported.");
-            }
+        if (opts.mode === "single") {
+            throw new Error("Streaming with --mode=single is not supported.");
+        }
 
-            const batch: Promise<void>[] = [];
-            for await (const xmlChunk of streamXmlElements(opts.input, tag)) {
-                const currentIndex = index++;
-                const task = (async () => {
+        // Implement backpressure with semaphore
+        // Allow 2x concurrency in flight to keep pipeline full without unbounded queuing
+        const semaphore = new Semaphore(opts.concurrency * 2);
+        const inFlight: Promise<void>[] = [];
+
+        for await (const xmlChunk of streamXmlElements(opts.input, tag)) {
+            const currentIndex = index++;
+
+            // Acquire semaphore permit before creating task
+            await semaphore.acquire();
+
+            const task = (async () => {
+                try {
                     const node = parseXml(xmlChunk);
                     const rec = node?.[tag] ?? node;
                     const htmlFrag = render(rec);
@@ -150,93 +154,45 @@ export class CompositionEngine {
                     const page = await pool.acquire();
                     logger.debug(`Task ${currentIndex}: Page acquired`);
                     try {
-                        logger.debug(`Task ${currentIndex}: Generating PDF`);
                         const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
-                        logger.debug(`Task ${currentIndex}: PDF Generated, size: ${bytes.length}`);
 
                         if (!opts.skipPageCount) {
-                            logger.debug(`Task ${currentIndex}: Counting pages`);
+                            // Import PDFDocument dynamically only for page counting
+                            const { PDFDocument } = await import("npm:pdf-lib@^1.17.1");
                             const doc = await PDFDocument.load(bytes);
-                            const pages = doc.getPageCount();
-                            totalPages += pages;
-                            logger.debug(`Task ${currentIndex}: Pages counted: ${pages}`);
+                            totalPages += doc.getPageCount();
                         }
 
                         const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
                         const outPath = join(opts.outDir, fileName);
-                        logger.debug(`Task ${currentIndex}: Writing file ${outPath}`);
                         await Deno.writeFile(outPath, bytes);
-                        logger.debug(`Task ${currentIndex}: File written`);
-                    } catch (err) {
-                        logger.error(`Failed to process record ${currentIndex}:`, err);
+                        logger.debug(`Task ${currentIndex}: PDF written`);
                     } finally {
-                        logger.debug(`Task ${currentIndex}: Releasing page`);
                         await pool.release(page);
+                        logger.debug(`Task ${currentIndex}: Page released`);
                     }
-                })();
-                batch.push(task);
-                if (batch.length >= opts.concurrency) {
-                    await Promise.all(batch);
-                    batch.length = 0;
-                    logger.info(`Processed ${currentIndex + 1}`);
+                } catch (err) {
+                    logger.error(`Failed to process record ${currentIndex}:`, err);
+                } finally {
+                    semaphore.release();
                 }
-                if (opts.limit && index >= opts.limit) break;
+            })();
+
+            inFlight.push(task);
+
+            // Log queue length periodically
+            if (currentIndex % 100 === 0) {
+                logger.debug(`Queue length: ${semaphore.waitingCount()}`);
             }
-            if (batch.length) await Promise.all(batch);
-            const count = Math.min(index, opts.limit ?? index);
-            logger.info(`Done. Wrote ${count} PDFs to ${opts.outDir}`);
-            return { processed: count, pages: totalPages };
+
+            if (opts.limit && index >= opts.limit) break;
         }
-        // PDF-Lib Engine
-        else {
-            if (opts.mode === "single") {
-                const doc = await createPdfDocument(opts.font);
-                let processed = 0;
-                for await (const xmlChunk of streamXmlElements(opts.input, tag)) {
-                    const node = parseXml(xmlChunk);
-                    const rec = node?.[tag] ?? node;
-                    const html = render(rec);
-                    await renderRecordToPdf(doc, html);
-                    processed++;
-                    if (opts.limit && processed >= opts.limit) break;
-                    if ((processed % 1000) === 0) logger.info(`Processed ${processed}`);
-                }
-                const base = basename(opts.input, extname(opts.input));
-                const outPath = join(opts.outDir, `${base}.pdf`);
-                await savePdf(doc, outPath);
-                totalPages = doc.getPageCount();
-                logger.info(`Wrote single PDF: ${outPath}`);
-                return { processed, pages: totalPages };
-            } else {
-                // Multi
-                const batch: Promise<void>[] = [];
-                for await (const xmlChunk of streamXmlElements(opts.input, tag)) {
-                    const currentIndex = index++;
-                    const task = (async () => {
-                        const node = parseXml(xmlChunk);
-                        const rec = node?.[tag] ?? node;
-                        const html = render(rec);
-                        const doc = await createPdfDocument(opts.font);
-                        await renderRecordToPdf(doc, html);
-                        totalPages += doc.getPageCount();
-                        const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
-                        const outPath = join(opts.outDir, fileName);
-                        await savePdf(doc, outPath);
-                    })();
-                    batch.push(task);
-                    if (batch.length >= opts.concurrency) {
-                        await Promise.all(batch);
-                        batch.length = 0;
-                        logger.info(`Processed ${currentIndex + 1}`);
-                    }
-                    if (opts.limit && index >= opts.limit) break;
-                }
-                if (batch.length) await Promise.all(batch);
-                const count = Math.min(index, opts.limit ?? index);
-                logger.info(`Done. Wrote ${count} PDFs to ${opts.outDir}`);
-                return { processed: count, pages: totalPages };
-            }
-        }
+
+        // Wait for all remaining tasks
+        await Promise.all(inFlight);
+        const count = Math.min(index, opts.limit ?? index);
+        logger.info(`Done. Wrote ${count} PDFs to ${opts.outDir}`);
+        return { processed: count, pages: totalPages };
     }
 
     private async processBatch(
@@ -245,7 +201,7 @@ export class CompositionEngine {
         cssContent: string,
         headerTpl: string | undefined,
         footerTpl: string | undefined,
-        pool?: BrowserPool
+        pool: BrowserPool
     ): Promise<{ processed: number; pages: number }> {
         const { opts, logger } = this;
         const xmlText = await Deno.readTextFile(opts.input);
@@ -256,110 +212,70 @@ export class CompositionEngine {
 
         logger.info(`Records: ${records.length}${opts.limit ? ` (processing ${total})` : ""}`);
 
-        if (opts.engine === "browser" && pool) {
-            if (opts.mode === "single") {
-                const page = await pool.acquire();
-                try {
-                    const parts: string[] = [];
-                    for (let i = 0; i < total; i++) {
-                        const rec = records[i];
-                        parts.push(render(rec));
-                        if (i < total - 1) parts.push('<div class="page-break"></div>');
-                    }
-                    const full = wrapHtmlDoc(parts.join("\n"), baseUrl);
-                    const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
-                    const doc = await PDFDocument.load(bytes);
-                    totalPages = doc.getPageCount();
-                    const base = basename(opts.input, extname(opts.input));
-                    const outPath = join(opts.outDir, `${base}.pdf`);
-                    await Deno.writeFile(outPath, bytes);
-                    logger.info(`Wrote single PDF: ${outPath}`);
-                    return { processed: total, pages: totalPages };
-                } finally {
-                    await pool.release(page);
-                }
-            } else {
-                let nextIndex = 0;
-                let processed = 0;
-                const worker = async (id: number) => {
-                    while (true) {
-                        const i = nextIndex++;
-                        if (i >= total) break;
-
-                        const page = await pool!.acquire();
-                        try {
-                            const rec = records[i];
-                            const htmlFrag = render(rec);
-                            const full = wrapHtmlDoc(htmlFrag, baseUrl);
-                            const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
-
-                            if (!opts.skipPageCount) {
-                                const doc = await PDFDocument.load(bytes);
-                                totalPages += doc.getPageCount();
-                            }
-
-                            const fileName = applyOutNamePattern(opts.outName, i, rec);
-                            const outPath = join(opts.outDir, fileName);
-                            await Deno.writeFile(outPath, bytes);
-                            processed++;
-                            if ((processed % 100) === 0) logger.info(`Worker ${id}: processed ${processed}/${total}`);
-                        } catch (err) {
-                            logger.error(`Failed to process record ${i}:`, err);
-                        } finally {
-                            await pool!.release(page);
-                        }
-                    }
-                };
-                const workers = Array.from({ length: opts.concurrency }, (_, id) => worker(id));
-                await Promise.all(workers);
-                logger.info(`Done. Wrote ${processed} PDFs to ${opts.outDir}`);
-                return { processed, pages: totalPages };
-            }
-        } else {
-            // pdf-lib (unchanged)
-            if (opts.mode === "single") {
-                const doc = await createPdfDocument(opts.font);
-                let processed = 0;
+        if (opts.mode === "single") {
+            const page = await pool.acquire();
+            try {
+                const parts: string[] = [];
                 for (let i = 0; i < total; i++) {
                     const rec = records[i];
-                    const html = render(rec);
-                    await renderRecordToPdf(doc, html);
-                    processed++;
-                    if ((processed % 1000) === 0) logger.info(`Processed ${processed}/${total}`);
+                    parts.push(render(rec));
+                    if (i < total - 1) parts.push('<div class="page-break"></div>');
                 }
+                const full = wrapHtmlDoc(parts.join("\n"), baseUrl);
+                const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
+
+                // Import PDFDocument dynamically only for page counting
+                const { PDFDocument } = await import("npm:pdf-lib@^1.17.1");
+                const doc = await PDFDocument.load(bytes);
+                totalPages = doc.getPageCount();
+
                 const base = basename(opts.input, extname(opts.input));
                 const outPath = join(opts.outDir, `${base}.pdf`);
-                await savePdf(doc, outPath);
-                totalPages = doc.getPageCount();
+                await Deno.writeFile(outPath, bytes);
                 logger.info(`Wrote single PDF: ${outPath}`);
-                return { processed, pages: totalPages };
-            } else {
-                let nextIndex = 0;
-                let processed = 0;
-                const worker = async (id: number) => {
-                    while (true) {
-                        const i = nextIndex++;
-                        if (i >= total) break;
+                return { processed: total, pages: totalPages };
+            } finally {
+                await pool.release(page);
+            }
+        } else {
+            // Multi mode
+            let nextIndex = 0;
+            let processed = 0;
+            const worker = async (id: number) => {
+                while (true) {
+                    const i = nextIndex++;
+                    if (i >= total) break;
+
+                    const page = await pool.acquire();
+                    try {
                         const rec = records[i];
-                        const html = render(rec);
-                        const doc = await createPdfDocument(opts.font);
-                        await renderRecordToPdf(doc, html);
-                        totalPages += doc.getPageCount();
+                        const htmlFrag = render(rec);
+                        const full = wrapHtmlDoc(htmlFrag, baseUrl);
+                        const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
+
+                        if (!opts.skipPageCount) {
+                            // Import PDFDocument dynamically only for page counting
+                            const { PDFDocument } = await import("npm:pdf-lib@^1.17.1");
+                            const doc = await PDFDocument.load(bytes);
+                            totalPages += doc.getPageCount();
+                        }
+
                         const fileName = applyOutNamePattern(opts.outName, i, rec);
                         const outPath = join(opts.outDir, fileName);
-                        await savePdf(doc, outPath);
+                        await Deno.writeFile(outPath, bytes);
                         processed++;
-                        if ((processed % 1000) === 0) {
-                            logger.info(`Worker ${id}: processed ${processed}/${total}`);
-                        }
+                        if ((processed % 100) === 0) logger.info(`Worker ${id}: processed ${processed}/${total}`);
+                    } catch (err) {
+                        logger.error(`Failed to process record ${i}:`, err);
+                    } finally {
+                        await pool.release(page);
                     }
-                };
-                const workers = Array.from({ length: opts.concurrency }, (_, id) => worker(id));
-                await Promise.all(workers);
-                logger.info(`Done. Wrote ${processed} PDFs to ${opts.outDir}`);
-                return { processed, pages: totalPages };
-            }
+                }
+            };
+            const workers = Array.from({ length: opts.concurrency }, (_, id) => worker(id));
+            await Promise.all(workers);
+            logger.info(`Done. Wrote ${processed} PDFs to ${opts.outDir}`);
+            return { processed, pages: totalPages };
         }
     }
 }
-
