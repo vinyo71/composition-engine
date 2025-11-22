@@ -1,6 +1,6 @@
 # Composition Engine
 
-![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)
 
 **High-performance, high-fidelity document generation at scale.**
 

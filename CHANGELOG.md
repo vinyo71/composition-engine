@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-11-22
+### Added
+- **Real-World Bank Statement**: Enhanced bank statement template and data generator based on professional Hungarian bank statement formats.
+  - Realistic Hungarian transaction types (bérutalás, készpénzfelvétel, bankkártyás fizetés, etc.)
+  - Account summary with opening/closing balances and period totals
+  - Transaction details with value dates and running balances
+  - Hungarian IBAN format (HU + 26 digits) and proper HUF currency formatting
+  - Professional bilingual styling matching real Hungarian bank statements
+  - Hungarian merchants and realistic transaction amounts per category
+  - Fictional bank names (Demo Bank, Példa Bank) for demo purposes
+
 ## [0.3.0] - 2025-11-22
 ### Added
 - **Asset Management**: Support for relative paths in templates (images, fonts) via automatic `<base>` tag injection.

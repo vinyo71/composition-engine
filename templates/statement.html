@@ -1,124 +1,356 @@
 <style>
-    body {
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        font-size: 10pt;
-        color: #333;
-        line-height: 1.6;
-        background-color: #f9f9f9;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }
-    .statement-container {
-        max-width: 800px;
-        margin: 20px auto;
-        padding: 30px;
-        border: 1px solid #ddd;
-        box-shadow: 0 0 15px rgba(0,0,0,0.05);
+
+    body {
+        font-family: 'Arial', 'Helvetica Neue', sans-serif;
+        font-size: 9pt;
+        color: #333;
+        line-height: 1.4;
         background-color: #fff;
     }
-    .header {
+
+    .statement-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Header Section */
+    .bank-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
+        align-items: flex-start;
+        margin-bottom: 25px;
         padding-bottom: 15px;
-        border-bottom: 3px solid #0056b3;
+        border-bottom: 3px solid #00539F;
     }
-    .header .bank-name {
-        font-size: 28pt;
+
+    .bank-logo {
+        flex: 1;
+    }
+
+    .bank-logo h1 {
+        font-size: 22pt;
         font-weight: bold;
-        color: #0056b3;
+        color: #00539F;
+        margin-bottom: 5px;
     }
-    .header .statement-title {
-        font-size: 16pt;
-        color: #555;
+
+    .bank-logo p {
+        font-size: 8pt;
+        color: #666;
+        margin: 2px 0;
+    }
+
+    .statement-info {
         text-align: right;
     }
-    .customer-info {
-        margin-bottom: 30px;
+
+    .statement-info h2 {
+        font-size: 14pt;
+        color: #00539F;
+        margin-bottom: 5px;
+    }
+
+    .statement-info p {
+        font-size: 8pt;
+        color: #666;
+        margin: 2px 0;
+    }
+
+    /* Account Information Section */
+    .account-section {
+        background-color: #f8f9fa;
         padding: 15px;
-        background-color: #f2f6fa;
-        border-radius: 5px;
+        margin-bottom: 20px;
+        border-left: 4px solid #00539F;
     }
-    .customer-info h2 {
-        font-size: 14pt;
-        color: #0056b3;
-        margin-top: 0;
+
+    .account-section h3 {
+        font-size: 11pt;
+        color: #00539F;
         margin-bottom: 10px;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 5px;
+        font-weight: bold;
     }
-    .customer-info p {
-        margin: 0;
-        line-height: 1.8;
+
+    .account-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
     }
-    .transactions-section h2 {
-        font-size: 14pt;
-        color: #0056b3;
-        margin-top: 0;
-        margin-bottom: 15px;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 5px;
+
+    .detail-item {
+        font-size: 9pt;
     }
+
+    .detail-item strong {
+        color: #555;
+        display: inline-block;
+        min-width: 120px;
+    }
+
+    /* Summary Section */
+    .summary-section {
+        margin-bottom: 20px;
+        background-color: #f0f4f8;
+        padding: 15px;
+        border-radius: 4px;
+    }
+
+    .summary-section h3 {
+        font-size: 11pt;
+        color: #00539F;
+        margin-bottom: 12px;
+        font-weight: bold;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .summary-item {
+        background-color: #fff;
+        padding: 10px 15px;
+        border-radius: 3px;
+        border-left: 3px solid #00539F;
+    }
+
+    .summary-item label {
+        display: block;
+        font-size: 8pt;
+        color: #666;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .summary-item .amount {
+        font-size: 12pt;
+        font-weight: bold;
+        color: #333;
+    }
+
+    /* Transactions Section */
+    .transactions-section {
+        margin-bottom: 20px;
+    }
+
+    .transactions-section h3 {
+        font-size: 11pt;
+        color: #00539F;
+        margin-bottom: 12px;
+        font-weight: bold;
+        border-bottom: 2px solid #e0e0e0;
+        padding-bottom: 8px;
+    }
+
     .transactions-table {
         width: 100%;
         border-collapse: collapse;
+        font-size: 8pt;
     }
-    .transactions-table th, .transactions-table td {
-        border-bottom: 1px solid #ddd;
-        padding: 12px 10px;
-        text-align: left;
+
+    .transactions-table thead {
+        background-color: #00539F;
+        color: white;
     }
+
     .transactions-table th {
-        background-color: #f2f6fa;
+        padding: 10px 8px;
+        text-align: left;
         font-weight: bold;
-        color: #333;
+        font-size: 8pt;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
     }
-    .transactions-table .currency, .transactions-table .amount {
+
+    .transactions-table th.right {
         text-align: right;
     }
-    .footer {
+
+    .transactions-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .transactions-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .transactions-table .date-col {
+        width: 80px;
+    }
+
+    .transactions-table .value-date-col {
+        width: 80px;
+        color: #666;
+    }
+
+    .transactions-table .description-col {
+        width: auto;
+    }
+
+    .transactions-table .amount-col {
+        width: 100px;
+        text-align: right;
+        font-weight: 500;
+    }
+
+    .transactions-table .balance-col {
+        width: 100px;
+        text-align: right;
+        font-weight: bold;
+        color: #00539F;
+    }
+
+    .credit {
+        color: #28a745;
+    }
+
+    .debit {
+        color: #dc3545;
+    }
+
+    /* Footer Section */
+    .statement-footer {
         margin-top: 30px;
         padding-top: 15px;
-        border-top: 1px solid #ccc;
-        font-size: 9pt;
+        border-top: 2px solid #e0e0e0;
+        font-size: 7pt;
         color: #777;
-        text-align: center;
+    }
+
+    .footer-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .footer-info {
+        flex: 1;
+    }
+
+    .footer-info p {
+        margin: 3px 0;
+    }
+
+    .footer-contact {
+        text-align: right;
+    }
+
+    .footer-contact p {
+        margin: 3px 0;
     }
 </style>
+
 <div class="statement-container">
-    <div class="header">
-        <div class="bank-name">Your Bank</div>
-        <div class="statement-title">Account Statement</div>
+    <!-- Bank Header -->
+    <div class="bank-header">
+        <div class="bank-logo">
+            <h1>{{BankName}}</h1>
+            <p>{{BankAddress}}</p>
+        </div>
+        <div class="statement-info">
+            <h2>Számla kivonat / Account Statement</h2>
+            <p><strong>Időszak / Period:</strong> {{StatementPeriod.From}} - {{StatementPeriod.To}}</p>
+            <p><strong>Kiállítva / Issued:</strong> {{formatDate StatementDate "yyyy-MM-dd"}}</p>
+        </div>
     </div>
-    <div class="customer-info">
-        <h2>Customer Details</h2>
-        <p><strong>Name:</strong> {{Name}}</p>
-        <p><strong>Address:</strong> {{Address}}</p>
-        <p><strong>Account Number:</strong> {{AccountNumber}}</p>
+
+    <!-- Account Information -->
+    <div class="account-section">
+        <h3>Számlainformáció / Account Information</h3>
+        <div class="account-details">
+            <div class="detail-item">
+                <strong>Számlatulajdonos:</strong> {{AccountHolder.Name}}
+            </div>
+            <div class="detail-item">
+                <strong>Számlaszám / IBAN:</strong> {{AccountNumber}}
+            </div>
+            <div class="detail-item">
+                <strong>Cím:</strong> {{AccountHolder.Address}}
+            </div>
+            <div class="detail-item">
+                <strong>Pénznem / Currency:</strong> HUF
+            </div>
+        </div>
     </div>
+
+    <!-- Account Summary -->
+    <div class="summary-section">
+        <h3>Egyenleg összegző / Balance Summary</h3>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <label>Nyitó egyenleg / Opening Balance</label>
+                <div class="amount">{{formatNumber OpeningBalance 2}} HUF</div>
+            </div>
+            <div class="summary-item">
+                <label>Záró egyenleg / Closing Balance</label>
+                <div class="amount">{{formatNumber ClosingBalance 2}} HUF</div>
+            </div>
+            <div class="summary-item">
+                <label>Összes jóváírás / Total Credits</label>
+                <div class="amount credit">+{{formatNumber TotalCredits 2}} HUF</div>
+            </div>
+            <div class="summary-item">
+                <label>Összes terhelés / Total Debits</label>
+                <div class="amount debit">-{{formatNumber TotalDebits 2}} HUF</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions -->
     <div class="transactions-section">
-        <h2>Transactions</h2>
+        <h3>Tranzakciók / Transactions</h3>
         <table class="transactions-table">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Description</th>
-                    <th class="currency">Currency</th>
-                    <th class="amount">Amount</th>
+                    <th class="date-col">Dátum<br>Date</th>
+                    <th class="value-date-col">Értéknap<br>Value Date</th>
+                    <th class="description-col">Leírás / Description</th>
+                    <th class="amount-col right">Terhelés<br>Debit</th>
+                    <th class="amount-col right">Jóváírás<br>Credit</th>
+                    <th class="balance-col right">Egyenleg<br>Balance</th>
                 </tr>
             </thead>
             <tbody>
                 {{#each Transactions.Transaction}}
                 <tr>
-                    <td>{{Date}}</td>
-                    <td>{{Description}}</td>
-                    <td class="currency">{{Currency}}</td>
-                    <td class="amount">{{Amount}}</td>
+                    <td class="date-col">{{formatDate Date "yyyy-MM-dd"}}</td>
+                    <td class="value-date-col">{{formatDate ValueDate "yyyy-MM-dd"}}</td>
+                    <td class="description-col">{{Description}}</td>
+                    <td class="amount-col debit">
+                        {{#if Debit}}{{formatNumber Debit 2}}{{/if}}
+                    </td>
+                    <td class="amount-col credit">
+                        {{#if Credit}}{{formatNumber Credit 2}}{{/if}}
+                    </td>
+                    <td class="balance-col">{{formatNumber Balance 2}}</td>
                 </tr>
                 {{/each}}
             </tbody>
         </table>
     </div>
-    <div class="footer">
-        <p>Thank you for banking with us.</p>
+
+    <!-- Footer -->
+    <div class="statement-footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <p><strong>{{BankName}}</strong></p>
+                <p>{{BankAddress}}</p>
+                <p>Ügyfélszolgálat / Customer Service: +36 1 555 6000</p>
+            </div>
+            <div class="footer-contact">
+                <p>www.mkbank.hu</p>
+                <p>info@mkbank.hu</p>
+                <p>Nyitvatartás / Opening Hours: H-P 8:00-17:00</p>
+            </div>
+        </div>
     </div>
 </div>

@@ -27,7 +27,7 @@
   - [x] Ensure relative paths for images (logos) and fonts work correctly in the rendered PDF.
 
 ### Demo Content & Collateral
-- [ ] **Real-World Bank Statement**: Create realistic data and template.
+- [x] **Real-World Bank Statement**: Create realistic data and template.
 - [x] **Product Data Sheet**: Create a template with features, requirements, and intro.
 
 ---
