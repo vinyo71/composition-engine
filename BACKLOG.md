@@ -21,8 +21,8 @@
 - [x] **Header/Footer & Pagination**:
   - [x] Implement standard header/footer injection for Browser engine.
   - [x] Support "Page X of Y" placeholders.
-- [ ] **Dynamic Charts**:
-  - [ ] Integrate a charting library (e.g., Chart.js or QuickChart) to render graphs in the PDF (e.g., "Spending Breakdown").
+- [x] **Dynamic Charts**:
+  - [x] Integrate a charting library (e.g., Chart.js or QuickChart) to render graphs in the PDF (e.g., "Spending Breakdown").
 - [ ] **Asset Management**:
   - [ ] Ensure relative paths for images (logos) and fonts work correctly in the rendered PDF.
 

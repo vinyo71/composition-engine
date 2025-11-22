@@ -30,6 +30,10 @@
       <Title>High Concurrency</Title>
       <Description>Parallel processing maximizes CPU usage and throughput by utilizing a robust pool of browser instances.</Description>
     </Feature>
+    <Feature>
+      <Title>Dynamic Charts</Title>
+      <Description>Embed data-driven charts directly in your documents.</Description>
+    </Feature>
   </Features>
   <Requirements>
     <Requirement>Deno Runtime (v2.5 or later)</Requirement>
@@ -51,7 +55,7 @@
     </Tier>
   </Pricing>
   <Contact>
-    <Website>https://github.com/vinyo71/composition-engine</Website>
-    <Email>contact@composition-engine.com</Email>
+    <Website>https://composition-engine.com</Website>
+    <Email>support@composition-engine.com</Email>
   </Contact>
 </Datasheet>

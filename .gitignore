@@ -16,3 +16,5 @@ inp/*
 !inp/datasheet.xml
 !out/datasheet.pdf
 
+error_log.txt
+fatal_error.txt

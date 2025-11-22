@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configuration Module**: Added `src/config.ts` for centralized configuration management.
 - **Unit Tests**: Added `tests/engine_test.ts` with initial tests for XML parsing and template rendering.
 - **CI/CD**: Added CI/CD pipeline task to Backlog.
+- **Dynamic Charts**: Implemented dynamic charting using Chart.js and Handlebars.
 
 ### Changed
 - **Refactor**: Moved all source files to their respective modules and updated imports.
