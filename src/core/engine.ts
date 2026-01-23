@@ -7,6 +7,16 @@ import { Logger } from "../utils/logger.ts";
 import { CompositionOptions } from "../types.ts";
 import { BrowserPool } from "../services/browser_pool.ts";
 import { Semaphore } from "../utils/semaphore.ts";
+import { ProgressBar } from "../utils/progress.ts";
+
+// Cached pdf-lib import to avoid repeated dynamic imports
+let _pdfLib: typeof import("npm:pdf-lib@^1.17.1") | null = null;
+async function getPdfLib() {
+    if (!_pdfLib) {
+        _pdfLib = await import("npm:pdf-lib@^1.17.1");
+    }
+    return _pdfLib;
+}
 
 // Helper to wrap HTML body
 function wrapHtmlDoc(body: string, baseUrl: string, extraCss = ""): string {
@@ -136,6 +146,23 @@ export class CompositionEngine {
         // Allow 2x concurrency in flight to keep pipeline full without unbounded queuing
         const semaphore = new Semaphore(opts.concurrency * 2);
         const inFlight: Promise<void>[] = [];
+        let completed = 0;
+
+        // For streaming, we don't know total upfront
+        // Priority: --totalRecords > --limit > filename pattern (e.g. _100000.xml) > default 1000
+        let estimatedTotal = 1000;
+        if (opts.totalRecords) {
+            estimatedTotal = opts.totalRecords;
+        } else if (opts.limit) {
+            estimatedTotal = opts.limit;
+        } else {
+            // Try to extract count from filename pattern like "bank_statements_100000.xml"
+            const match = opts.input.match(/_(\d+)\.[^.]+$/);
+            if (match) {
+                estimatedTotal = parseInt(match[1], 10);
+            }
+        }
+        const progress = new ProgressBar(estimatedTotal, opts.logLevel);
 
         for await (const xmlChunk of streamXmlElements(opts.input, tag)) {
             const currentIndex = index++;
@@ -157,8 +184,7 @@ export class CompositionEngine {
                         const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
 
                         if (!opts.skipPageCount) {
-                            // Import PDFDocument dynamically only for page counting
-                            const { PDFDocument } = await import("npm:pdf-lib@^1.17.1");
+                            const { PDFDocument } = await getPdfLib();
                             const doc = await PDFDocument.load(bytes);
                             totalPages += doc.getPageCount();
                         }
@@ -175,6 +201,8 @@ export class CompositionEngine {
                     logger.error(`Failed to process record ${currentIndex}:`, err);
                 } finally {
                     semaphore.release();
+                    completed++;
+                    progress.update(completed);
                 }
             })();
 
@@ -182,7 +210,7 @@ export class CompositionEngine {
 
             // Log queue length periodically
             if (currentIndex % 100 === 0) {
-                logger.debug(`Queue length: ${semaphore.waitingCount()}`);
+                logger.debug(`Queue length: ${semaphore.getQueueLength()}`);
             }
 
             if (opts.limit && index >= opts.limit) break;
@@ -190,6 +218,7 @@ export class CompositionEngine {
 
         // Wait for all remaining tasks
         await Promise.all(inFlight);
+        progress.finish();
         const count = Math.min(index, opts.limit ?? index);
         logger.info(`Done. Wrote ${count} PDFs to ${opts.outDir}`);
         return { processed: count, pages: totalPages };
@@ -224,8 +253,7 @@ export class CompositionEngine {
                 const full = wrapHtmlDoc(parts.join("\n"), baseUrl);
                 const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
 
-                // Import PDFDocument dynamically only for page counting
-                const { PDFDocument } = await import("npm:pdf-lib@^1.17.1");
+                const { PDFDocument } = await getPdfLib();
                 const doc = await PDFDocument.load(bytes);
                 totalPages = doc.getPageCount();
 
@@ -241,6 +269,7 @@ export class CompositionEngine {
             // Multi mode
             let nextIndex = 0;
             let processed = 0;
+            const progress = new ProgressBar(total, opts.logLevel);
             const worker = async (id: number) => {
                 while (true) {
                     const i = nextIndex++;
@@ -254,8 +283,7 @@ export class CompositionEngine {
                         const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
 
                         if (!opts.skipPageCount) {
-                            // Import PDFDocument dynamically only for page counting
-                            const { PDFDocument } = await import("npm:pdf-lib@^1.17.1");
+                            const { PDFDocument } = await getPdfLib();
                             const doc = await PDFDocument.load(bytes);
                             totalPages += doc.getPageCount();
                         }
@@ -264,7 +292,7 @@ export class CompositionEngine {
                         const outPath = join(opts.outDir, fileName);
                         await Deno.writeFile(outPath, bytes);
                         processed++;
-                        if ((processed % 100) === 0) logger.info(`Worker ${id}: processed ${processed}/${total}`);
+                        progress.update(processed);
                     } catch (err) {
                         logger.error(`Failed to process record ${i}:`, err);
                     } finally {
@@ -274,6 +302,7 @@ export class CompositionEngine {
             };
             const workers = Array.from({ length: opts.concurrency }, (_, id) => worker(id));
             await Promise.all(workers);
+            progress.finish();
             logger.info(`Done. Wrote ${processed} PDFs to ${opts.outDir}`);
             return { processed, pages: totalPages };
         }

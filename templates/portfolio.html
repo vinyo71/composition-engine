@@ -1,0 +1,507 @@
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 9pt;
+        color: #1a1a2e;
+        line-height: 1.5;
+        background: #fff;
+    }
+
+    .page {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 25px 30px;
+    }
+
+    .page-break {
+        page-break-after: always;
+    }
+
+    /* Header */
+    .header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: white;
+        padding: 25px 30px;
+        margin: -25px -30px 25px -30px;
+        border-radius: 0 0 8px 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .logo {
+        font-size: 22pt;
+        font-weight: 700;
+    }
+
+    .logo span {
+        color: #4ade80;
+    }
+
+    .client-info {
+        text-align: right;
+        font-size: 9pt;
+    }
+
+    .client-info h2 {
+        font-size: 14pt;
+        margin-bottom: 5px;
+    }
+
+    .client-info p {
+        opacity: 0.8;
+        margin: 2px 0;
+    }
+
+    /* Value Hero */
+    .value-hero {
+        text-align: center;
+        padding: 30px 0;
+        margin-bottom: 25px;
+        background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .value-hero label {
+        display: block;
+        font-size: 10pt;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .value-hero .amount {
+        font-size: 36pt;
+        font-weight: 700;
+        color: #1a1a2e;
+    }
+
+    .value-hero .gain {
+        font-size: 14pt;
+        margin-top: 10px;
+        color: #16a34a;
+    }
+
+    /* Performance Cards */
+    .performance-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .perf-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .perf-card label {
+        display: block;
+        font-size: 8pt;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .perf-card .value {
+        font-size: 16pt;
+        font-weight: 600;
+        color: #16a34a;
+    }
+
+    .perf-card .benchmark {
+        font-size: 8pt;
+        color: #94a3b8;
+        margin-top: 3px;
+    }
+
+    /* Risk Metrics */
+    .metrics-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+
+    .metric-badge {
+        flex: 1;
+        background: #f1f5f9;
+        border-radius: 6px;
+        padding: 12px;
+        text-align: center;
+    }
+
+    .metric-badge label {
+        display: block;
+        font-size: 7pt;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+    }
+
+    .metric-badge .value {
+        font-size: 12pt;
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+
+    /* Section Headers */
+    .section-header {
+        font-size: 12pt;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin: 25px 0 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #4ade80;
+    }
+
+    /* Charts */
+    .chart-container {
+        width: 100%;
+        height: 280px;
+        margin: 20px 0;
+    }
+
+    .chart-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .chart-half {
+        flex: 1;
+    }
+
+    .chart-half .chart-container {
+        height: 220px;
+    }
+
+    /* Tables */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 8pt;
+        margin-bottom: 20px;
+    }
+
+    .data-table thead {
+        background: #1a1a2e;
+        color: white;
+    }
+
+    .data-table th {
+        padding: 10px 8px;
+        text-align: left;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 7pt;
+    }
+
+    .data-table th.right {
+        text-align: right;
+    }
+
+    .data-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .data-table td.right {
+        text-align: right;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .positive {
+        color: #16a34a;
+    }
+
+    .negative {
+        color: #dc2626;
+    }
+
+    .symbol {
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+
+    .company {
+        color: #64748b;
+        font-size: 7pt;
+    }
+
+    /* Activity */
+    .activity-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+
+    .activity-item {
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 12px;
+        text-align: center;
+    }
+
+    .activity-item label {
+        display: block;
+        font-size: 7pt;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+    }
+
+    .activity-item .value {
+        font-size: 11pt;
+        font-weight: 600;
+    }
+
+    /* Footer */
+    .disclosure {
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 15px;
+        margin-top: 15px;
+        font-size: 7pt;
+        color: #64748b;
+        line-height: 1.6;
+    }
+</style>
+
+<div class="page">
+    <div class="header">
+        <div class="logo">Apex<span>Invest</span></div>
+        <div class="client-info">
+            <h2>{{Client.Name}}</h2>
+            <p>{{Client.AccountNumber}}</p>
+            <p>{{Client.AccountType}}</p>
+            <p>{{ReportPeriod.Quarter}}</p>
+        </div>
+    </div>
+    <div class="value-hero">
+        <label>Total Portfolio Value</label>
+        <div class="amount">${{formatNumber Summary.TotalValue 2}}</div>
+        <div class="gain">+${{formatNumber Summary.UnrealizedGain 2}} ({{Summary.TotalGainPercent}}%)</div>
+    </div>
+    <div class="performance-grid">
+        <div class="perf-card"><label>Month to Date</label>
+            <div class="value">{{Performance.MTD}}%</div>
+            <div class="benchmark">Benchmark: {{Benchmark.MTD}}%</div>
+        </div>
+        <div class="perf-card"><label>Quarter to Date</label>
+            <div class="value">{{Performance.QTD}}%</div>
+            <div class="benchmark">Benchmark: {{Benchmark.QTD}}%</div>
+        </div>
+        <div class="perf-card"><label>Year to Date</label>
+            <div class="value">{{Performance.YTD}}%</div>
+            <div class="benchmark">Benchmark: {{Benchmark.YTD}}%</div>
+        </div>
+    </div>
+    <div class="performance-grid">
+        <div class="perf-card"><label>1 Year</label>
+            <div class="value">{{Performance.OneYear}}%</div>
+        </div>
+        <div class="perf-card"><label>3 Year</label>
+            <div class="value">{{Performance.ThreeYear}}%</div>
+        </div>
+        <div class="perf-card"><label>Since Inception</label>
+            <div class="value">{{Performance.SinceInception}}%</div>
+        </div>
+    </div>
+    <h3 class="section-header">Risk Metrics</h3>
+    <div class="metrics-row">
+        <div class="metric-badge"><label>Sharpe Ratio</label>
+            <div class="value">{{RiskMetrics.SharpeRatio}}</div>
+        </div>
+        <div class="metric-badge"><label>Sortino Ratio</label>
+            <div class="value">{{RiskMetrics.SortinoRatio}}</div>
+        </div>
+        <div class="metric-badge"><label>Max Drawdown</label>
+            <div class="value">{{RiskMetrics.MaxDrawdown}}%</div>
+        </div>
+        <div class="metric-badge"><label>Volatility</label>
+            <div class="value">{{RiskMetrics.Volatility}}%</div>
+        </div>
+        <div class="metric-badge"><label>Beta</label>
+            <div class="value">{{RiskMetrics.Beta}}</div>
+        </div>
+    </div>
+    <h3 class="section-header">Alpha vs {{Benchmark.Name}}</h3>
+    <div class="value-hero" style="padding: 15px 0;">
+        <div class="amount" style="font-size: 24pt;">+{{Benchmark.Alpha}}%</div>
+        <label style="margin-top: 5px;">Outperformance Year to Date</label>
+    </div>
+</div>
+<div class="page-break"></div>
+
+<div class="page">
+    <div class="header">
+        <div class="logo">Apex<span>Invest</span></div>
+        <div class="client-info">
+            <h2>Asset Allocation</h2>
+            <p>{{Client.Name}} - {{ReportPeriod.Quarter}}</p>
+        </div>
+    </div>
+    <div class="chart-row">
+        <div class="chart-half">
+            <h3 class="section-header">Allocation by Asset Class</h3>
+            <div class="chart-container"><canvas id="allocationChart"></canvas></div>
+        </div>
+        <div class="chart-half">
+            <h3 class="section-header">Allocation by Sector</h3>
+            <div class="chart-container"><canvas id="sectorChart"></canvas></div>
+        </div>
+    </div>
+    <h3 class="section-header">Current vs Target Allocation</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Asset Class</th>
+                <th class="right">Market Value</th>
+                <th class="right">Current %</th>
+                <th class="right">Target %</th>
+            </tr>
+        </thead>
+        <tbody>{{#each AssetAllocation.ByClass.Asset}}<tr>
+                <td><strong>{{Class}}</strong></td>
+                <td class="right">${{formatNumber Value 2}}</td>
+                <td class="right">{{Percent}}%</td>
+                <td class="right">{{Target}}%</td>
+            </tr>{{/each}}</tbody>
+    </table>
+</div>
+<div class="page-break"></div>
+
+<div class="page">
+    <div class="header">
+        <div class="logo">Apex<span>Invest</span></div>
+        <div class="client-info">
+            <h2>Holdings</h2>
+            <p>{{Client.Name}} - {{ReportPeriod.Quarter}}</p>
+        </div>
+    </div>
+    <h3 class="section-header">Portfolio Holdings</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Shares</th>
+                <th class="right">Price</th>
+                <th class="right">Value</th>
+                <th class="right">Gain</th>
+                <th class="right">Weight</th>
+            </tr>
+        </thead>
+        <tbody>{{#each Holdings.Holding}}<tr>
+                <td><span class="symbol">{{Symbol}}</span><br><span class="company">{{Name}}</span></td>
+                <td>{{Shares}}</td>
+                <td class="right">${{formatNumber CurrentPrice 2}}</td>
+                <td class="right">${{formatNumber MarketValue 2}}</td>
+                <td class="right">${{formatNumber UnrealizedGain 2}} ({{GainPercent}}%)</td>
+                <td class="right">{{Weight}}%</td>
+            </tr>{{/each}}</tbody>
+    </table>
+</div>
+<div class="page-break"></div>
+
+<div class="page">
+    <div class="header">
+        <div class="logo">Apex<span>Invest</span></div>
+        <div class="client-info">
+            <h2>Account Activity</h2>
+            <p>{{Client.Name}} - {{ReportPeriod.Quarter}}</p>
+        </div>
+    </div>
+    <h3 class="section-header">Cash Flow Summary</h3>
+    <div class="activity-grid">
+        <div class="activity-item"><label>Deposits</label>
+            <div class="value positive">+${{formatNumber Activity.Deposits 2}}</div>
+        </div>
+        <div class="activity-item"><label>Withdrawals</label>
+            <div class="value">-${{formatNumber Activity.Withdrawals 2}}</div>
+        </div>
+        <div class="activity-item"><label>Dividends</label>
+            <div class="value positive">+${{formatNumber Activity.Dividends 2}}</div>
+        </div>
+        <div class="activity-item"><label>Interest</label>
+            <div class="value">${{formatNumber Activity.Interest 2}}</div>
+        </div>
+        <div class="activity-item"><label>Fees</label>
+            <div class="value">-${{formatNumber Activity.Fees 2}}</div>
+        </div>
+    </div>
+    <h3 class="section-header">Income Summary</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th class="right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Dividend Income</td>
+                <td class="right positive">+${{formatNumber Summary.DividendIncome 2}}</td>
+            </tr>
+            <tr>
+                <td>Realized Gains</td>
+                <td class="right positive">+${{formatNumber Summary.RealizedGain 2}}</td>
+            </tr>
+            <tr>
+                <td>Unrealized Gains</td>
+                <td class="right">${{formatNumber Summary.UnrealizedGain 2}}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="disclosure">
+        <strong>Important Disclosures</strong><br><br>
+        Past performance is not indicative of future results. All investments carry risk, including possible loss of
+        principal.
+        The Sharpe Ratio, Sortino Ratio, and other risk metrics are calculated based on monthly returns over the
+        trailing 12-month period.
+        Benchmark returns are based on the S&amp;P 500 Total Return Index and are provided for comparison purposes
+        only.<br><br>
+        <strong>ApexInvest Securities LLC</strong> - Member FINRA/SIPC - Customer Service: 1-800-555-0199 -
+        www.apexinvest.com
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var allocLabels = {{{ ChartData.AllocLabels }}};
+    var allocData = {{{ ChartData.AllocData }}};
+    var sectorLabels = {{{ ChartData.SectorLabels }}};
+    var sectorData = {{{ ChartData.SectorData }}};
+
+    var ctx1 = document.getElementById('allocationChart');
+    if (ctx1) {
+        new Chart(ctx1, {
+            type: 'doughnut',
+            data: { labels: allocLabels, datasets: [{ data: allocData, backgroundColor: ['#4ade80', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'], borderWidth: 0 }] },
+            options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+    }
+
+    var ctx2 = document.getElementById('sectorChart');
+    if (ctx2) {
+        new Chart(ctx2, {
+            type: 'bar',
+            data: { labels: sectorLabels, datasets: [{ data: sectorData, backgroundColor: '#3b82f6', borderRadius: 4 }] },
+            options: { animation: false, indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 50 }, y: {} } }
+        });
+    }
+</script>

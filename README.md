@@ -1,6 +1,6 @@
 # Composition Engine
 
-![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)
 
 **High-performance, high-fidelity document generation at scale.**
 
@@ -12,7 +12,7 @@ The Composition Engine bridges the gap between raw data (XML) and professional d
 *   **Handlebars Templates**: Full support for logic (`{{#if}}`, `{{#each}}`) and formatting helpers (`formatCurrency`, `formatDate`).
 *   **Scalable Streaming**: Processes gigabyte-sized XML files with millions of records without loading the entire file into memory.
     *   **Backpressure Control**: Prevents memory spikes with semaphore-based flow control
-    *   **Asset Caching**: Caches images, fonts, and stylesheets to reduce redundant network requests
+    *   **Asset Caching**: Caches images, fonts, and stylesheets with LRU eviction to reduce redundant network requests
 *   **Flexible Output**:
     *   **Multi Mode**: Generates individual PDF files for each record (e.g., for emailing).
     *   **Single Mode**: Combines all records into a single PDF (e.g., for archival or print).
@@ -20,6 +20,7 @@ The Composition Engine bridges the gap between raw data (XML) and professional d
 *   **Asset Management**: Automatic handling of relative paths for images and fonts in templates.
 *   **High Concurrency**: Parallel processing to maximize CPU usage and throughput (~8-10 pages/sec).
 *   **Optimized Performance**: Chrome headless shell support for faster startup and lower memory footprint.
+*   **Premium Templates**: Includes Invoice, Bank Statement, and Portfolio Report templates.
 
 ## Quick Start
 
@@ -112,8 +113,8 @@ deno task compose `
 | `--chrome` | Path to the Chrome/Edge executable. | Auto-detected |
 | `--limit` | Stop after processing N records. Useful for testing. | `undefined` |
 | `--logLevel` | `quiet`, `info`, or `debug`. | `info` |
-| `--engine` | `browser` (recommended) or `pdf-lib` (deprecated text-only). | `browser` |
 | `--skipPageCount` | Skip parsing generated PDFs to count pages. Improves performance. | `false` |
+| `--totalRecords` | Expected record count for progress bar in streaming mode. | Auto-detected |
 
 ## Advanced Topics
 

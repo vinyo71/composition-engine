@@ -26,7 +26,7 @@ export function parseConfig(args: string[]): CompositionOptions {
             l: "limit",
             ll: "logLevel",
         },
-        string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "streamTag", "chrome", "css", "headerTemplate", "footerTemplate", "logLevel"],
+        string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "streamTag", "chrome", "css", "headerTemplate", "footerTemplate", "logLevel", "totalRecords"],
         boolean: ["version", "skipPageCount"],
     });
 
@@ -42,17 +42,23 @@ export function parseConfig(args: string[]): CompositionOptions {
 
     const defaults = getDefaultOptions();
 
-    // Required arguments
+    // Required arguments with actionable error messages
     if (!parsed.input) {
-        console.error("Error: --input <path> is required.");
+        console.error("❌ Error: --input <path> is required.");
+        console.error("   Specify the path to your XML data file.");
+        console.error("   Example: deno task compose --input ./inp/data.xml --template ./templates/tpl.html --outDir ./out");
         Deno.exit(1);
     }
     if (!parsed.template) {
-        console.error("Error: --template <path> is required.");
+        console.error("❌ Error: --template <path> is required.");
+        console.error("   Specify the path to your HTML template file.");
+        console.error("   Example: deno task compose --input ./inp/data.xml --template ./templates/tpl.html --outDir ./out");
         Deno.exit(1);
     }
     if (!parsed.outDir) {
-        console.error("Error: --outDir <path> is required.");
+        console.error("❌ Error: --outDir <path> is required.");
+        console.error("   Specify the output directory for generated PDFs.");
+        console.error("   Example: deno task compose --input ./inp/data.xml --template ./templates/tpl.html --outDir ./out");
         Deno.exit(1);
     }
 
@@ -73,6 +79,7 @@ export function parseConfig(args: string[]): CompositionOptions {
         footerTemplate: parsed.footerTemplate ? String(parsed.footerTemplate) : undefined,
         logLevel: (parsed.logLevel ?? defaults.logLevel) as LogLevel,
         skipPageCount: parsed.skipPageCount ? Boolean(parsed.skipPageCount) : false,
+        totalRecords: parsed.totalRecords ? Number(parsed.totalRecords) : undefined,
     };
 
     validateOptions(opts);

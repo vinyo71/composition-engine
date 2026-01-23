@@ -111,15 +111,17 @@ export async function htmlToPdfBytes(
     page = browserOrPage;
   }
 
+  // Define handlers as named functions so we can remove them later
+  const requestHandler = (req: any) => globalAssetCache.intercept(req);
+  const responseHandler = (res: any) => globalAssetCache.handleResponse(res);
+
   try {
     // Enable request interception for asset caching
     await page.setRequestInterception(true);
 
-    // Handle requests with cache
-    page.on('request', (req: any) => globalAssetCache.intercept(req));
-
-    // Cache responses
-    page.on('response', (res: any) => globalAssetCache.handleResponse(res));
+    // Handle requests with cache (store references to remove later)
+    page.on('request', requestHandler);
+    page.on('response', responseHandler);
 
     await page.setContent(fullHtml, { waitUntil: "load", timeout: 30000 });
     if (cssContent) {
@@ -136,6 +138,10 @@ export async function htmlToPdfBytes(
     });
     return buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   } finally {
+    // Remove event handlers to prevent memory leak on reused pages
+    page.off('request', requestHandler);
+    page.off('response', responseHandler);
+    
     if (shouldClose) {
       await page.close();
     }

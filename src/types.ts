@@ -18,6 +18,7 @@ export type CompositionOptions = {
     footerTemplate?: string; // optional path to footer HTML file
     logLevel: LogLevel;
     skipPageCount?: boolean;
+    totalRecords?: number; // expected record count for progress bar in streaming mode
 };
 
 export type LogLevel = "quiet" | "info" | "debug" | "warn";

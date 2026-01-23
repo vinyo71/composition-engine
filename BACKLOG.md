@@ -40,6 +40,8 @@
 - [ ] **Unit Tests**:
   - [ ] `xml.ts`: Verify `streamXmlElements` handles chunk boundaries correctly.
   - [ ] `template.ts`: Verify Handlebars helpers and logic.
+  - [ ] `browser_pool.ts`: Test acquire/release lifecycle and error recovery.
+  - [ ] `asset_cache.ts`: Test eviction strategy and cache stats.
 - [ ] **Integration Tests**:
   - [ ] End-to-end test with a "Golden Master" PDF comparison.
 
@@ -56,6 +58,15 @@
   - [x] **Real-World Data**: Dataset with variable record sizes (1-50 pages per record) to test streaming stability. *(Test data generator created)*
 - [x] **Performance Documentation**: Document performance metrics and create tuning guide.
 
+
+### Performance Fixes (NEW - 2026-01-23)
+- [x] **Fix Event Handler Memory Leak**: Remove event handlers from pages after PDF generation in `pdf.ts`.
+  - Event handlers accumulate on reused pages causing memory leak.
+- [x] **LRU Cache Eviction**: Implement proper LRU eviction in `AssetCache` instead of clearing entire cache.
+- [x] **Cache PDFDocument Import**: Avoid dynamic `import()` on every record for page counting.
+- [ ] **Browser Pool Pre-warming**: Pre-create pages on pool initialization for faster first-record processing.
+- [ ] **Parallel File I/O**: Batch file writes in worker loop for 5-10% throughput gain.
+
 ### Deployment & Observability
 - [ ] **Executable Binary**: Compile to standalone executable.
 - [x] **Performance Metrics**: Measure pages/sec and generation phases.
@@ -64,34 +75,56 @@
 
 ### Configuration & UX
 - [ ] **Config File**: Support `composition.config.json` for default settings.
-- [ ] **CLI Improvements**: Better progress bars and actionable error messages.
+- [x] **CLI Improvements**: 
+  - [x] Better progress bars with ETA and real-time throughput.
+  - [x] Actionable error messages.
 - [ ] **Style Library**: Create a unified CSS style set for product branding.
   - [ ] Define brand colors, fonts, and design patterns.
   - [ ] Update example templates (datasheet, invoice, statement) to use consistent styling.
   - [ ] Provide reusable CSS components for common document elements.
+- [ ] **Dry Run Mode**: Validate templates and data without generating PDFs.
 
 ---
 
 ## 🔮 Phase 3: Future Features (Competitive Parity)
 *Goal: Match features of enterprise CCM tools like DocBridge Impress and OL Connect.*
 
-- [ ] **Interfaces**:
-  - [ ] **REST API**: Server implementation alongside CLI.
-- [ ] **Legacy Output**:
-  - [ ] Support PCL and AFP formats.
-- [ ] **Multi-Channel Output**:
-  - [ ] Generate HTML emails alongside PDFs (Omnichannel).
-  - [ ] Responsive templates that adapt to device size (Digital First).
-- [ ] **Multi-Language Support**:
-  - [ ] Internationalization (i18n) helpers (e.g., `{{t "invoice_date"}}`).
+### Input Formats (NEW - 2026-01-23)
+- [ ] **JSON Input**: Support JSON data sources natively.
+- [ ] **CSV Input**: Support CSV data sources.
+- [ ] **Auto-Detection**: Detect input format from file extension.
+
+### Interfaces
+- [ ] **REST API**: Server implementation alongside CLI.
+  - [ ] HTTP endpoint for on-demand PDF generation.
+  - [ ] Batch job submission and status tracking.
+
+### Legacy Output
+- [ ] **PCL/AFP Support**: Support PCL and AFP formats for legacy print systems.
+
+### Multi-Channel Output
+- [ ] **HTML Email Output**: Generate HTML emails alongside PDFs (Omnichannel).
+- [ ] **Responsive Templates**: Templates that adapt to device size (Digital First).
+- [ ] **ZIP Archive**: Bundle multiple PDFs into a single ZIP file.
+
+### Multi-Language Support
+- [ ] **Internationalization (i18n)**: 
+  - [ ] Helpers (e.g., `{{t "invoice_date"}}`).
   - [ ] Load translation files (JSON/YAML) dynamically.
   - [ ] Support RTL languages (Arabic, Hebrew).
-- [ ] **Visual Designer**:
-  - [ ] Web-based drag-and-drop template builder (WYSIWYG).
-  - [ ] Interactive preview with real data.
+- [ ] **Locale-aware Helpers**: Pass `locale` param to formatters.
+
+### Visual Designer
+- [ ] **Web-based Template Builder**: Drag-and-drop WYSIWYG editor.
+- [ ] **Interactive Preview**: Preview with real data.
+
+### Advanced Routing
 - [ ] **Multi-Template Routing**: Select template dynamically based on record data.
-- [ ] **Input Formats**: Support JSON and CSV input sources.
-- [ ] **Output Options**: Support ZIP archiving of generated PDFs.
+
+### Output Options
+- [ ] **PDF Merge/Append**: Append to existing PDF files.
+
+### Security
 - [ ] **Sandboxing**: Secure execution environment for untrusted templates.
 
 ---

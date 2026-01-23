@@ -1,12 +1,20 @@
 import { HTTPRequest, HTTPResponse } from "npm:puppeteer";
 
+interface CacheEntry {
+    body: Buffer;
+    contentType: string;
+    status: number;
+    size: number;
+    lastAccess: number;
+}
+
 /**
  * Cache for browser assets (images, fonts, stylesheets) to avoid redundant network requests.
- * Uses Puppeteer's request interception to cache responses in memory.
+ * Uses Puppeteer's request interception to cache responses in memory with LRU eviction.
  */
 export class AssetCache {
-    private cache = new Map<string, { body: Buffer; contentType: string; status: number }>();
-    private stats = { hits: 0, misses: 0, bytes: 0 };
+    private cache = new Map<string, CacheEntry>();
+    private stats = { hits: 0, misses: 0, bytes: 0, evictions: 0 };
     private maxCacheSize: number;
 
     /**
@@ -34,6 +42,8 @@ export class AssetCache {
         const cached = this.cache.get(url);
         if (cached) {
             this.stats.hits++;
+            // Update access time for LRU
+            cached.lastAccess = Date.now();
             return request.respond({
                 status: cached.status,
                 contentType: cached.contentType,
@@ -73,23 +83,51 @@ export class AssetCache {
         try {
             const body = await response.buffer();
             const contentType = response.headers()['content-type'] || 'application/octet-stream';
+            const size = body.length;
 
-            // Check cache size limit
-            if (this.stats.bytes + body.length > this.maxCacheSize) {
-                // Simple eviction: clear cache if we hit the limit
-                // Could implement LRU in the future
-                this.cache.clear();
-                this.stats.bytes = 0;
-            }
+            // Evict LRU entries if needed to make room
+            this.evictIfNeeded(size);
 
             this.cache.set(url, {
                 body,
                 contentType,
                 status: response.status(),
+                size,
+                lastAccess: Date.now(),
             });
-            this.stats.bytes += body.length;
-        } catch (err) {
+            this.stats.bytes += size;
+        } catch (_err) {
             // Ignore errors (e.g., response already consumed)
+        }
+    }
+
+    /**
+     * Evicts least recently used entries until there's room for bytesNeeded.
+     */
+    private evictIfNeeded(bytesNeeded: number): void {
+        // If the new item alone exceeds max size, skip caching it
+        if (bytesNeeded > this.maxCacheSize) {
+            return;
+        }
+
+        while (this.stats.bytes + bytesNeeded > this.maxCacheSize && this.cache.size > 0) {
+            // Find LRU entry
+            let lruUrl: string | null = null;
+            let lruTime = Infinity;
+
+            for (const [url, entry] of this.cache) {
+                if (entry.lastAccess < lruTime) {
+                    lruTime = entry.lastAccess;
+                    lruUrl = url;
+                }
+            }
+
+            if (lruUrl) {
+                const entry = this.cache.get(lruUrl)!;
+                this.stats.bytes -= entry.size;
+                this.stats.evictions++;
+                this.cache.delete(lruUrl);
+            }
         }
     }
 
@@ -112,6 +150,6 @@ export class AssetCache {
      */
     clear() {
         this.cache.clear();
-        this.stats = { hits: 0, misses: 0, bytes: 0 };
+        this.stats = { hits: 0, misses: 0, bytes: 0, evictions: 0 };
     }
 }

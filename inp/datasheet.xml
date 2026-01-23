@@ -2,7 +2,7 @@
 <Datasheet>
   <Product>
     <Name>Composition Engine</Name>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <Tagline>Turn Data into Documents.</Tagline>
     <Subtitle>Fast. Scalable. Just HTML & CSS.</Subtitle>
   </Product>

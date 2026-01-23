@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-01-23
+### Added
+- **Portfolio Report Template**: Premium 4-page investment portfolio report template (`portfolio.html`).
+  - Executive summary with KPIs and risk metrics.
+  - Interactive Chart.js donut and bar charts for asset allocation.
+  - Detailed holdings table and activity summary.
+- **Chart.js Integration**: Full support for embedding dynamic charts in PDFs.
+  - Solved Handlebars compatibility issues by pre-computing chart data as JSON in the generator.
+  - Added `ChartData` section to XML output with `AllocLabels`, `AllocData`, etc.
+
+## [0.4.2] - 2026-01-23
+### Added
+- **Progress Bar**: Real-time progress display during PDF generation.
+  - Shows progress bar, percentage, throughput (PDFs/sec), and ETA.
+  - New `ProgressBar` class (`src/utils/progress.ts`) with throttled rendering.
+  - Integrated into both streaming and batch processing modes.
+- **Actionable Error Messages**: CLI errors now include helpful examples.
+  - Missing required arguments show usage examples.
+  - Emoji indicators (❌) for quick visual identification.
+
+## [0.4.1] - 2026-01-23
+### Fixed
+- **Event Handler Memory Leak**: Fixed memory leak in `pdf.ts` where request/response handlers were added to reused pages but never removed.
+  - Handlers now properly removed in `finally` block after PDF generation.
+- **LRU Cache Eviction**: Replaced full-cache-clear eviction with proper LRU eviction in `AssetCache`.
+  - Tracks `lastAccess` timestamp per entry.
+  - Evicts oldest entries when cache limit reached instead of clearing everything.
+  - Added `evictions` counter to cache stats.
+
+### Performance
+- **Cached PDFDocument Import**: The pdf-lib module is now imported once and cached instead of dynamically imported per-record.
+  - Added `getPdfLib()` helper function to cache the import.
+  - Reduces module resolution overhead when page counting is enabled.
+
 ## [0.4.0] - 2025-11-22
 ### Added
 - **Backpressure Control**: Implemented semaphore-based backpressure in streaming pipeline to prevent memory spikes during high-volume processing.
