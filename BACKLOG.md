@@ -67,11 +67,76 @@
 - [ ] **Browser Pool Pre-warming**: Pre-create pages on pool initialization for faster first-record processing.
 - [ ] **Parallel File I/O**: Batch file writes in worker loop for 5-10% throughput gain.
 
+### Technology Stack Evaluation (NEW - 2026-01-25)
+*Research findings on alternative frameworks/languages for performance optimization.*
+
+#### ✅ Evaluated & Decided
+- [x] **WebKit/Safari Engine**: ❌ NOT RECOMMENDED for PDF generation.
+  - Playwright PDF generation only works with Chromium, not WebKit.
+  - wkhtmltopdf (WebKit-based) is outdated (~2014), lacks modern CSS/JS support.
+  - WebKit tests run up to 2x slower than Chromium in benchmarks.
+- [x] **Rust/Go Rewrite**: ❌ NOT WORTH IT for this use case.
+  - Browser rendering (Chromium) is the bottleneck (~95% of processing time).
+  - Language change would only optimize ~5% of execution time.
+  - Rewrite effort (2-4 weeks) vastly outweighs marginal gains.
+- [x] **Chrome/Blink (V8)**: ✅ OPTIMAL - Already using the best engine.
+  - Best PDF support, fastest JS engine, best CSS support.
+  - Headless shell optimization available and implemented.
+
+#### ⚠️ Optional Future Improvements
+- [ ] **Playwright Migration**: Consider replacing Puppeteer with Playwright.
+  - Expected gain: +5-10% throughput, slightly lower memory.
+  - Same Chromium engine for PDF, modern API with better auto-waiting.
+  - Effort: 1-2 days. Risk: Low.
+- [ ] **typst Fast-Path**: Add alternative renderer for simple structured documents.
+  - Expected gain: 5-10x faster for simple templates (invoices, statements).
+  - Trade-off: Requires typst markup instead of HTML templates.
+  - Only worth it if extreme throughput needed (100+ pages/sec).
+  - Effort: 1-2 weeks. Risk: Medium (template format change).
+
+### Pipeline Deep-Dive Optimizations (NEW - 2026-01-25)
+*Comprehensive analysis of all 5 pipeline stages. See [PIPELINE_OPTIMIZATION.md](docs/PIPELINE_OPTIMIZATION.md) for full details.*
+
+**Target: +50-80% throughput improvement with Tier 1+2 optimizations.**
+
+#### Tier 1: Quick Wins (4-8 hours, +15-30%)
+- [ ] **Browser Pool Pre-warming**: Pre-create pages on pool initialization.
+  - Expected gain: -500ms startup, -100ms/first-record.
+  - Effort: 2-3 hours. File: `browser_pool.ts`
+- [ ] **Parallel File I/O**: Batch file writes with background queue.
+  - Expected gain: +5-10% throughput.
+  - Effort: 2-3 hours. File: `engine.ts`
+- [ ] **GPU Acceleration Flags**: Enable `--enable-gpu-rasterization` in Chromium.
+  - Expected gain: +10-20% on GPU-capable systems.
+  - Effort: 1-2 hours. File: `browser_pool.ts`
+
+#### Tier 2: Medium Term (2-4 days, +30-50%)
+- [ ] **Playwright Migration**: Replace Puppeteer with Playwright.
+  - Expected gain: +5-10% throughput, modern API.
+  - Effort: 1-2 days. Files: `pdf.ts`, `browser_pool.ts`
+- [ ] **Pre-compiled Templates**: Pre-compile Handlebars to JavaScript.
+  - Expected gain: +5-10% template render.
+  - Effort: 4-6 hours. File: `template.ts`
+- [ ] **Multi-Browser Instances**: Multiple browsers for 16+ core systems.
+  - Expected gain: +30-50% on high-core machines.
+  - Effort: 4-6 hours. New file: `multi_browser_pool.ts`
+- [ ] **PDF Streaming Output**: Stream to disk without full buffering.
+  - Expected gain: -30% memory.
+  - Effort: 6-8 hours. File: `pdf.ts`
+
+#### Tier 3: Advanced (1-2 weeks, +100-1000%)
+- [ ] **typst Fast-Path**: Alternative renderer for structured documents.
+  - Expected gain: 5-10x faster for simple templates.
+  - Effort: 1-2 weeks. New module.
+- [ ] **Distributed Processing**: Scale across multiple machines.
+  - Expected gain: Linear scaling with machine count.
+  - Effort: 1-2 weeks. Architecture change.
+- [ ] **Cloud Functions**: Serverless PDF generation (Lambda/GCF).
+  - Expected gain: Auto-scaling, pay-per-use.
+  - Effort: 1 week. New deployment mode.
+
 ### Deployment & Observability
 - [ ] **Executable Binary**: Compile to standalone executable.
-- [x] **Performance Metrics**: Measure pages/sec and generation phases.
-- [ ] **Detailed Logging**: More granular logs.
-- [ ] **Job Statistics**: Output TXT/PDF report with generation stats.
 
 ### Configuration & UX
 - [ ] **Config File**: Support `composition.config.json` for default settings.
