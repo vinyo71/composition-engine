@@ -19,8 +19,26 @@ export type CompositionOptions = {
     logLevel: LogLevel;
     skipPageCount?: boolean;
     totalRecords?: number; // expected record count for progress bar in streaming mode
+    jsonOutput?: boolean; // output results as JSON (for scripting/automation)
+    verbose?: boolean; // show additional details (cache stats, concurrency, etc.)
 };
 
 export type LogLevel = "quiet" | "info" | "debug" | "warn";
 
 export type RecordData = Record<string, any>;
+
+// Result type for job output
+export type JobResult = {
+    status: "success" | "warning" | "error";
+    input: string;
+    output: string;
+    processed: number;
+    failed: number;
+    pages: number;
+    totalBytes: number;
+    timeMs: number;
+    pdfsPerSec: number;
+    pagesPerSec: number;
+    errors: string[];
+};
+

@@ -7,6 +7,7 @@ async function main() {
 
   try {
     await engine.process();
+    Deno.exit(0); // Explicit exit to ensure clean termination
   } catch (err) {
     console.error("Fatal error:", err);
     Deno.exit(1);

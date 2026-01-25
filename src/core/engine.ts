@@ -2,14 +2,15 @@ import { ensureDir } from "jsr:@std/fs/ensure-dir";
 import { basename, extname, join, dirname, toFileUrl } from "jsr:@std/path";
 import { parseXml, findRecords, streamXmlElements } from "../utils/xml.ts";
 import { compileTemplate } from "../services/template.ts";
-import { createBrowser, closeBrowser, htmlToPdfBytes, findChromeExecutable } from "../services/pdf.ts";
+import { createBrowser, closeBrowser, htmlToPdfBytes, findChromeExecutable, getAssetCacheStats } from "../services/pdf.ts";
 import { Logger } from "../utils/logger.ts";
 import { CompositionOptions } from "../types.ts";
 import { BrowserPool } from "../services/browser_pool.ts";
 import { Semaphore } from "../utils/semaphore.ts";
 import { ProgressBar } from "../utils/progress.ts";
+import { countPdfPages } from "../utils/pdf_page_counter.ts";
 
-// Cached pdf-lib import to avoid repeated dynamic imports
+// Cached pdf-lib import for single-mode (needs full PDF merge capabilities)
 let _pdfLib: typeof import("npm:pdf-lib@^1.17.1") | null = null;
 async function getPdfLib() {
     if (!_pdfLib) {
@@ -93,7 +94,7 @@ export class CompositionEngine {
         const chromePath = this.opts.chrome || await findChromeExecutable();
         const pool = new BrowserPool(this.opts.concurrency, chromePath, this.opts.logLevel);
 
-        let result = { processed: 0, pages: 0 };
+        let result = { processed: 0, pages: 0, totalBytes: 0, failed: 0, errors: [] as string[] };
         const t_process_start = performance.now();
 
         try {
@@ -106,22 +107,114 @@ export class CompositionEngine {
                 result = await this.processBatch(render, baseUrl, cssContent, headerTpl, footerTpl, pool);
             }
         } finally {
+            this.logger.debug("Destroying browser pool...");
             await pool.destroy();
         }
 
         const t_end = performance.now();
         const processTime = t_end - t_process_start;
         const totalTime = t_end - t_start;
-        const pagesPerSec = processTime > 0 ? (result.pages / (processTime / 1000)) : 0;
 
-        if (this.opts.logLevel !== "quiet") {
-            this.logger.info("---");
-            this.logger.info("Timing Summary");
-            this.logger.info(`Setup:      ${setupTime.toFixed(2)} ms`);
-            this.logger.info(`Processing: ${processTime.toFixed(2)} ms`);
-            this.logger.info(`Total:      ${totalTime.toFixed(2)} ms`);
-            this.logger.info(`Total Pages: ${result.pages}`);
-            this.logger.info(`Throughput: ${pagesPerSec.toFixed(2)} pages/sec`);
+        this.printJobSummary(result, setupTime, processTime, totalTime);
+    }
+
+    private printJobSummary(
+        result: { processed: number; pages: number; totalBytes: number; failed: number; errors: string[] },
+        setupTime: number,
+        processTime: number,
+        totalTime: number
+    ) {
+        const { opts, logger } = this;
+        const pdfsPerSec = processTime > 0 ? (result.processed / (processTime / 1000)) : 0;
+        const pagesPerSec = result.pages > 0 ? (result.pages / (processTime / 1000)) : 0;
+        const msPerPdf = result.processed > 0 ? (processTime / result.processed) : 0;
+        const cacheStats = getAssetCacheStats();
+        const inputBasename = opts.input.split(/[/\\]/).pop() || opts.input;
+
+        const formatBytes = (bytes: number): string => {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+        };
+
+        // JSON output mode
+        if (opts.jsonOutput) {
+            const status = result.failed > 0 ? (result.processed > 0 ? "warning" : "error") : "success";
+            const jsonResult = {
+                status,
+                input: opts.input,
+                output: opts.outDir,
+                processed: result.processed,
+                failed: result.failed,
+                pages: result.pages,
+                totalBytes: result.totalBytes,
+                timeMs: Math.round(totalTime),
+                pdfsPerSec: Math.round(pdfsPerSec * 100) / 100,
+                pagesPerSec: Math.round(pagesPerSec * 100) / 100,
+                errors: result.errors,
+            };
+            console.log(JSON.stringify(jsonResult, null, 2));
+            return;
+        }
+
+        // Quiet mode - no output
+        if (opts.logLevel === "quiet") {
+            return;
+        }
+
+        // Determine status
+        const status = result.failed > 0
+            ? (result.processed > 0 ? "[WARN] Completed with errors" : "[ERR] Failed")
+            : "[OK] Completed";
+
+        logger.info("");
+        logger.info(status);
+        logger.info(`  Input:       ${inputBasename} (${result.processed + result.failed} records)`);
+        logger.info(`  Output:      ${opts.outDir}`);
+
+        if (result.failed > 0) {
+            logger.info(`  Success:     ${result.processed}/${result.processed + result.failed} (${result.failed} failed)`);
+        } else {
+            logger.info(`  PDFs:        ${result.processed}`);
+        }
+
+        if (!opts.skipPageCount && result.pages > 0) {
+            const avgPages = (result.pages / result.processed).toFixed(1);
+            logger.info(`  Pages:       ${result.pages} (${avgPages} avg)`);
+            logger.info(`  Throughput:  ${pdfsPerSec.toFixed(2)} PDFs/sec | ${pagesPerSec.toFixed(2)} pages/sec`);
+        } else {
+            logger.info(`  Throughput:  ${pdfsPerSec.toFixed(2)} PDFs/sec`);
+        }
+
+        if (result.totalBytes > 0) {
+            const avgSize = result.totalBytes / result.processed;
+            logger.info(`  Size:        ${formatBytes(result.totalBytes)} (${formatBytes(avgSize)} avg)`);
+        }
+
+        logger.info(`  Time:        ${(totalTime / 1000).toFixed(2)}s (${msPerPdf.toFixed(0)}ms/PDF)`);
+
+        // Verbose mode - show extra details
+        if (opts.verbose) {
+            logger.info("");
+            logger.info("  Details:");
+            logger.info(`    Concurrency:  ${opts.concurrency}`);
+            logger.info(`    Mode:         ${opts.streamTag ? "streaming" : "batch"}`);
+            logger.info(`    Setup:        ${setupTime.toFixed(0)}ms`);
+            if (cacheStats.hits > 0 || cacheStats.misses > 0) {
+                logger.info(`    Cache:        ${cacheStats.hitRate}% hit (${cacheStats.hits}/${cacheStats.hits + cacheStats.misses})`);
+            }
+        }
+
+        // Show errors if any
+        if (result.failed > 0 && result.errors.length > 0) {
+            logger.info("");
+            logger.info(`  Errors (${result.errors.length}):`);
+            for (const err of result.errors.slice(0, 10)) { // Show max 10 errors
+                logger.info(`    - ${err}`);
+            }
+            if (result.errors.length > 10) {
+                logger.info(`    ... and ${result.errors.length - 10} more`);
+            }
         }
     }
 
@@ -132,11 +225,14 @@ export class CompositionEngine {
         headerTpl: string | undefined,
         footerTpl: string | undefined,
         pool: BrowserPool
-    ): Promise<{ processed: number; pages: number }> {
+    ): Promise<{ processed: number; pages: number; totalBytes: number; failed: number; errors: string[] }> {
         const { opts, logger } = this;
         const tag = opts.streamTag!;
         let index = 0;
         let totalPages = 0;
+        let totalBytes = 0;
+        let failed = 0;
+        const errors: string[] = [];
 
         if (opts.mode === "single") {
             throw new Error("Streaming with --mode=single is not supported.");
@@ -184,10 +280,9 @@ export class CompositionEngine {
                         const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
 
                         if (!opts.skipPageCount) {
-                            const { PDFDocument } = await getPdfLib();
-                            const doc = await PDFDocument.load(bytes);
-                            totalPages += doc.getPageCount();
+                            totalPages += countPdfPages(bytes);
                         }
+                        totalBytes += bytes.length;
 
                         const fileName = applyOutNamePattern(opts.outName, currentIndex, rec);
                         const outPath = join(opts.outDir, fileName);
@@ -198,6 +293,9 @@ export class CompositionEngine {
                         logger.debug(`Task ${currentIndex}: Page released`);
                     }
                 } catch (err) {
+                    failed++;
+                    const errMsg = `Record ${currentIndex}: ${err instanceof Error ? err.message : String(err)}`;
+                    errors.push(errMsg);
                     logger.error(`Failed to process record ${currentIndex}:`, err);
                 } finally {
                     semaphore.release();
@@ -220,8 +318,7 @@ export class CompositionEngine {
         await Promise.all(inFlight);
         progress.finish();
         const count = Math.min(index, opts.limit ?? index);
-        logger.info(`Done. Wrote ${count} PDFs to ${opts.outDir}`);
-        return { processed: count, pages: totalPages };
+        return { processed: count - failed, pages: totalPages, totalBytes, failed, errors };
     }
 
     private async processBatch(
@@ -231,15 +328,18 @@ export class CompositionEngine {
         headerTpl: string | undefined,
         footerTpl: string | undefined,
         pool: BrowserPool
-    ): Promise<{ processed: number; pages: number }> {
+    ): Promise<{ processed: number; pages: number; totalBytes: number; failed: number; errors: string[] }> {
         const { opts, logger } = this;
         const xmlText = await Deno.readTextFile(opts.input);
         const xmlRoot = parseXml(xmlText);
         const records = findRecords(xmlRoot, opts.recordPath);
         const total = opts.limit ? Math.min(records.length, opts.limit) : records.length;
         let totalPages = 0;
+        let totalBytes = 0;
+        let failed = 0;
+        const errors: string[] = [];
 
-        logger.info(`Records: ${records.length}${opts.limit ? ` (processing ${total})` : ""}`);
+        logger.debug(`Records: ${records.length}${opts.limit ? ` (processing ${total})` : ""}`);;
 
         if (opts.mode === "single") {
             const page = await pool.acquire();
@@ -261,7 +361,7 @@ export class CompositionEngine {
                 const outPath = join(opts.outDir, `${base}.pdf`);
                 await Deno.writeFile(outPath, bytes);
                 logger.info(`Wrote single PDF: ${outPath}`);
-                return { processed: total, pages: totalPages };
+                return { processed: total, pages: totalPages, totalBytes: bytes.length, failed: 0, errors: [] };
             } finally {
                 await pool.release(page);
             }
@@ -283,10 +383,9 @@ export class CompositionEngine {
                         const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
 
                         if (!opts.skipPageCount) {
-                            const { PDFDocument } = await getPdfLib();
-                            const doc = await PDFDocument.load(bytes);
-                            totalPages += doc.getPageCount();
+                            totalPages += countPdfPages(bytes);
                         }
+                        totalBytes += bytes.length;
 
                         const fileName = applyOutNamePattern(opts.outName, i, rec);
                         const outPath = join(opts.outDir, fileName);
@@ -294,6 +393,9 @@ export class CompositionEngine {
                         processed++;
                         progress.update(processed);
                     } catch (err) {
+                        failed++;
+                        const errMsg = `Record ${i}: ${err instanceof Error ? err.message : String(err)}`;
+                        errors.push(errMsg);
                         logger.error(`Failed to process record ${i}:`, err);
                     } finally {
                         await pool.release(page);
@@ -303,8 +405,7 @@ export class CompositionEngine {
             const workers = Array.from({ length: opts.concurrency }, (_, id) => worker(id));
             await Promise.all(workers);
             progress.finish();
-            logger.info(`Done. Wrote ${processed} PDFs to ${opts.outDir}`);
-            return { processed, pages: totalPages };
+            return { processed, pages: totalPages, totalBytes, failed, errors };
         }
     }
 }

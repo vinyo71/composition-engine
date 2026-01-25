@@ -71,7 +71,7 @@ export class BrowserPool {
 
     async destroy() {
         this.destroying = true;
-        this.logger.info("Destroying browser pool...");
+        this.logger.debug("Destroying browser pool...");
 
         // Close all pooled pages
         await Promise.all(this.pages.map((p) => p.close().catch(() => { })));

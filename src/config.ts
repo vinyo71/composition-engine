@@ -25,9 +25,10 @@ export function parseConfig(args: string[]): CompositionOptions {
             c: "concurrency",
             l: "limit",
             ll: "logLevel",
+            v: "verbose",
         },
         string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "streamTag", "chrome", "css", "headerTemplate", "footerTemplate", "logLevel", "totalRecords"],
-        boolean: ["version", "skipPageCount"],
+        boolean: ["version", "skipPageCount", "json", "verbose"],
     });
 
     if (parsed.version) {
@@ -80,6 +81,8 @@ export function parseConfig(args: string[]): CompositionOptions {
         logLevel: (parsed.logLevel ?? defaults.logLevel) as LogLevel,
         skipPageCount: parsed.skipPageCount ? Boolean(parsed.skipPageCount) : false,
         totalRecords: parsed.totalRecords ? Number(parsed.totalRecords) : undefined,
+        jsonOutput: parsed.json ? Boolean(parsed.json) : false,
+        verbose: parsed.verbose ? Boolean(parsed.verbose) : false,
     };
 
     validateOptions(opts);

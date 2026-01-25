@@ -1,6 +1,6 @@
 # Composition Engine
 
-![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.5.1-blue.svg)
 
 **High-performance, high-fidelity document generation at scale.**
 
@@ -113,8 +113,10 @@ deno task compose `
 | `--chrome` | Path to the Chrome/Edge executable. | Auto-detected |
 | `--limit` | Stop after processing N records. Useful for testing. | `undefined` |
 | `--logLevel` | `quiet`, `info`, or `debug`. | `info` |
-| `--skipPageCount` | Skip parsing generated PDFs to count pages. Improves performance. | `false` |
+| `--skipPageCount` | Skip counting pages (pages/sec still shown via lightweight parser). | `false` |
 | `--totalRecords` | Expected record count for progress bar in streaming mode. | Auto-detected |
+| `--json` | Output job results as JSON for scripting/automation. | `false` |
+| `--verbose` / `-v` | Show additional details (concurrency, mode, cache stats). | `false` |
 
 ## Advanced Topics
 
@@ -148,6 +150,9 @@ deno task compose --input data.xml --template tpl.html --outDir ./out --skipPage
 
 # Lower memory - use streaming for large files
 deno task compose --input data.xml --template tpl.html --outDir ./out --streamTag Record
+
+# Machine-readable output for scripting
+deno task compose --input data.xml --template tpl.html --outDir ./out --json
 ```
 
 ## Contributing

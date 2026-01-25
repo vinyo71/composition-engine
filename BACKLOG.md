@@ -143,6 +143,8 @@
 - [x] **CLI Improvements**: 
   - [x] Better progress bars with ETA and real-time throughput.
   - [x] Actionable error messages.
+  - [x] **New Flags**: Added `--json` (machine-readable) and `--verbose` (debug details).
+  - [x] **Job Summary**: Clean status indicators (`[OK]`, `[ERR]`) and failure reporting.
 - [ ] **Style Library**: Create a unified CSS style set for product branding.
   - [ ] Define brand colors, fonts, and design patterns.
   - [ ] Update example templates (datasheet, invoice, statement) to use consistent styling.

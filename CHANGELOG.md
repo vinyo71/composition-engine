@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-01-25
+### Added
+- **JSON Output Mode**: New `--json` flag outputs machine-readable job results for scripting/automation.
+- **Verbose Mode**: New `--verbose` / `-v` flag shows additional details (concurrency, mode, cache stats).
+- **Error Tracking**: Failed records are now tracked and reported with specific error messages in the job summary.
+- **Status Indicators**: Clear `[OK]`, `[WARN]`, `[ERR]` status in job summary for quick visual feedback.
+
+### Changed
+- **Improved Job Summary**: Cleaner, more informative output with input file, output path, and comprehensive metrics:
+  - PDFs, Pages (with avg), Throughput, Size, and Time
+  - Hidden debug messages (e.g., "Destroying browser pool..." now requires `--logLevel debug`)
+- **Lightweight Page Counter**: Replaced pdf-lib page counting with regex-based parsing (~10x faster, zero overhead).
+
+### Fixed
+- **Stream Tag Matching**: Fixed XML streaming to use exact tag matching. Previously `--streamTag Portfolio` incorrectly matched `<PortfolioReport>`.
+- **Process Exit**: Fixed app not exiting after completion due to dangling browser pool resources.
+
 ## [0.5.0] - 2026-01-23
 ### Added
 - **Portfolio Report Template**: Premium 4-page investment portfolio report template (`portfolio.html`).
