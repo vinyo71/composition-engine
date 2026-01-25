@@ -11,13 +11,7 @@ import { ProgressBar } from "../utils/progress.ts";
 import { countPdfPages } from "../utils/pdf_page_counter.ts";
 
 // Cached pdf-lib import for single-mode (needs full PDF merge capabilities)
-let _pdfLib: typeof import("npm:pdf-lib@^1.17.1") | null = null;
-async function getPdfLib() {
-    if (!_pdfLib) {
-        _pdfLib = await import("npm:pdf-lib@^1.17.1");
-    }
-    return _pdfLib;
-}
+
 
 // Helper to wrap HTML body
 function wrapHtmlDoc(body: string, baseUrl: string, extraCss = ""): string {
@@ -353,9 +347,7 @@ export class CompositionEngine {
                 const full = wrapHtmlDoc(parts.join("\n"), baseUrl);
                 const bytes = await htmlToPdfBytes(page, full, cssContent, headerTpl, footerTpl);
 
-                const { PDFDocument } = await getPdfLib();
-                const doc = await PDFDocument.load(bytes);
-                totalPages = doc.getPageCount();
+                totalPages = countPdfPages(bytes);
 
                 const base = basename(opts.input, extname(opts.input));
                 const outPath = join(opts.outDir, `${base}.pdf`);

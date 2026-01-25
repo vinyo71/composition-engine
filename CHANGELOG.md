@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - PDFs, Pages (with avg), Throughput, Size, and Time
   - Hidden debug messages (e.g., "Destroying browser pool..." now requires `--logLevel debug`)
 - **Lightweight Page Counter**: Replaced pdf-lib page counting with regex-based parsing (~10x faster, zero overhead).
+- **Cleanup**: Removed `pdf-lib` dependency completely.
+- **Cleanup**: Removed unused cache helper files.
 
 ### Fixed
 - **Stream Tag Matching**: Fixed XML streaming to use exact tag matching. Previously `--streamTag Portfolio` incorrectly matched `<PortfolioReport>`.
