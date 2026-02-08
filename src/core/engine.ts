@@ -1,6 +1,7 @@
 import { ensureDir } from "jsr:@std/fs/ensure-dir";
 import { basename, extname, join, dirname, toFileUrl } from "jsr:@std/path";
 import { parseXml, findRecords, streamXmlElements } from "../utils/xml.ts";
+import { parseJsonInput, findJsonRecords } from "../utils/json_parser.ts";
 import { compileTemplate } from "../services/template.ts";
 import { createBrowser, closeBrowser, htmlToPdfBytes, findChromeExecutable, getAssetCacheStats } from "../services/pdf.ts";
 import { Logger } from "../utils/logger.ts";
@@ -84,9 +85,35 @@ export class CompositionEngine {
         const t_setup_end = performance.now();
         const setupTime = t_setup_end - t_start;
 
-        // Initialize Browser Pool
+        // Initialize Browser Pool with pre-warming
         const chromePath = this.opts.chrome || await findChromeExecutable();
         const pool = new BrowserPool(this.opts.concurrency, chromePath, this.opts.logLevel);
+        await pool.initialize(); // Pre-warm pages for faster first record
+
+        // Dry-run mode: validate template and data, then exit
+        if (this.opts.dryRun) {
+            const ext = extname(this.opts.input).toLowerCase();
+            const content = await Deno.readTextFile(this.opts.input);
+            let recordCount: number;
+
+            if (ext === ".json") {
+                const records = parseJsonInput(content);
+                recordCount = this.opts.limit ? Math.min(records.length, this.opts.limit) : records.length;
+            } else {
+                const xmlRoot = parseXml(content);
+                const records = findRecords(xmlRoot, this.opts.recordPath);
+                recordCount = this.opts.limit ? Math.min(records.length, this.opts.limit) : records.length;
+            }
+
+            const t_end = performance.now();
+            this.logger.info("[DRY RUN] Validation complete");
+            this.logger.info(`  Input:     ${this.opts.input}`);
+            this.logger.info(`  Template:  ${this.opts.template}`);
+            this.logger.info(`  Records:   ${recordCount}`);
+            this.logger.info(`  Time:      ${((t_end - t_start) / 1000).toFixed(2)}s`);
+            await pool.destroy();
+            return;
+        }
 
         let result = { processed: 0, pages: 0, totalBytes: 0, failed: 0, errors: [] as string[] };
         const t_process_start = performance.now();
@@ -324,9 +351,22 @@ export class CompositionEngine {
         pool: BrowserPool
     ): Promise<{ processed: number; pages: number; totalBytes: number; failed: number; errors: string[] }> {
         const { opts, logger } = this;
-        const xmlText = await Deno.readTextFile(opts.input);
-        const xmlRoot = parseXml(xmlText);
-        const records = findRecords(xmlRoot, opts.recordPath);
+        const inputText = await Deno.readTextFile(opts.input);
+
+        // Auto-detect input format based on file extension
+        const ext = extname(opts.input).toLowerCase();
+        let records: unknown[];
+
+        if (ext === ".json") {
+            records = opts.recordPath
+                ? findJsonRecords(JSON.parse(inputText), opts.recordPath)
+                : parseJsonInput(inputText);
+        } else {
+            // Default to XML parsing
+            const xmlRoot = parseXml(inputText);
+            records = findRecords(xmlRoot, opts.recordPath);
+        }
+
         const total = opts.limit ? Math.min(records.length, opts.limit) : records.length;
         let totalPages = 0;
         let totalBytes = 0;

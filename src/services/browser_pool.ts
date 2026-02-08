@@ -17,9 +17,34 @@ export class BrowserPool {
         this.logger = new Logger(logLevel);
     }
 
-    async acquire(): Promise<Page> {
+    /**
+     * Pre-warm the browser pool by creating all pages upfront.
+     * Call this before processing to eliminate cold-start latency.
+     */
+    async initialize(): Promise<void> {
         if (!this.browser) {
             this.logger.debug("Initializing shared browser instance...");
+            this.browser = await this.createBrowser();
+        }
+
+        // Pre-create all pages in parallel
+        const pagesToCreate = this.maxSize - this.pages.length;
+        if (pagesToCreate > 0) {
+            const startTime = Date.now();
+            const newPages = await Promise.all(
+                Array.from({ length: pagesToCreate }, () => this.browser!.newPage())
+            );
+            this.pages.push(...newPages);
+            this.active = this.pages.length;
+            const elapsed = Date.now() - startTime;
+            this.logger.info(`Pre-warmed ${pagesToCreate} browser pages in ${elapsed}ms`);
+        }
+    }
+
+    async acquire(): Promise<Page> {
+        // Lazy initialize if initialize() wasn't called
+        if (!this.browser) {
+            this.logger.debug("Lazy-initializing browser (consider calling initialize() first)");
             this.browser = await this.createBrowser();
         }
 
@@ -93,7 +118,10 @@ export class BrowserPool {
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
-                "--disable-gpu",
+                // GPU acceleration for faster rendering
+                "--enable-gpu-rasterization",
+                "--enable-accelerated-2d-canvas",
+                "--ignore-gpu-blocklist",
             ],
         });
     }

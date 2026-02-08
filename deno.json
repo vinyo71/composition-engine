@@ -1,5 +1,5 @@
 {
-  "version": "0.5.1",
+  "version": "0.6.1",
   "tasks": {
     "compose": "deno run -A src/cli.ts",
     "dev": "deno run -A --watch=src src/cli.ts",
@@ -7,6 +7,7 @@
     "gen_data": "deno run -A src/generators/gen_data.ts",
     "gen_invoices": "deno run -A src/generators/gen_invoice_data.ts",
     "gen_mvm": "deno run -A src/generators/gen_mvm_data.ts",
+    "gen_insurance": "deno run -A src/generators/gen_insurance_data.ts",
     "gen_datasheet": "deno task compose --input ./inp/datasheet.xml --template ./templates/datasheet.html --outDir ./out --mode single --recordPath . --outName datasheet.pdf",
     "gen_chart": "deno run -A src/generators/gen_chart_data.ts && deno task compose --input ./inp/chart_data.xml --template ./templates/chart_demo.html --outDir ./out/charts --mode multi --recordPath Root.Record --outName 'chart_{index}.pdf' --engine browser",
     "gen_portfolio": "deno run -A src/generators/gen_portfolio_data.ts"

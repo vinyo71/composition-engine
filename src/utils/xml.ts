@@ -1,5 +1,12 @@
 import { XMLParser } from "fast-xml-parser";
 
+// Elements that should always be arrays, even if there's only one
+// Note: PolicyStatement NOT included since streaming mode parses each element individually
+const ALWAYS_ARRAY = [
+  "Vehicle", "Driver", "Coverage", "Item", "Claim", 
+  "Beneficiary", "ScheduledItem"
+];
+
 export function parseXml(xmlText: string): any {
   const parser = new XMLParser({
     ignoreAttributes: false,
@@ -8,6 +15,7 @@ export function parseXml(xmlText: string): any {
     parseTagValue: true,
     parseAttributeValue: true,
     trimValues: true,
+    isArray: (name) => ALWAYS_ARRAY.includes(name),
   });
   const root = parser.parse(xmlText);
   if (!root || typeof root !== "object") {

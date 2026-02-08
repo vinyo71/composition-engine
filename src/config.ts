@@ -28,7 +28,7 @@ export function parseConfig(args: string[]): CompositionOptions {
             v: "verbose",
         },
         string: ["input", "template", "outDir", "outName", "format", "mode", "recordPath", "streamTag", "chrome", "css", "headerTemplate", "footerTemplate", "logLevel", "totalRecords"],
-        boolean: ["version", "skipPageCount", "json", "verbose"],
+        boolean: ["version", "skipPageCount", "json", "verbose", "dryRun"],
     });
 
     if (parsed.version) {
@@ -83,6 +83,7 @@ export function parseConfig(args: string[]): CompositionOptions {
         totalRecords: parsed.totalRecords ? Number(parsed.totalRecords) : undefined,
         jsonOutput: parsed.json ? Boolean(parsed.json) : false,
         verbose: parsed.verbose ? Boolean(parsed.verbose) : false,
+        dryRun: parsed.dryRun ? Boolean(parsed.dryRun) : false,
     };
 
     validateOptions(opts);

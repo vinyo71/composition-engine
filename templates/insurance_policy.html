@@ -1,0 +1,438 @@
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 8.5pt; color: #1f2937; line-height: 1.4; background: #fff; }
+    .page { max-width: 800px; margin: 0 auto; padding: 20px 25px; }
+    .page-break { page-break-after: always; }
+
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 2px solid #1e3a5f; margin-bottom: 15px; }
+    .logo { font-size: 18pt; font-weight: 700; color: #1e3a5f; }
+    .logo span { color: #d97706; }
+    .header-right { text-align: right; font-size: 8pt; color: #6b7280; }
+    .header-right .policy-num { font-size: 10pt; font-weight: 600; color: #1f2937; }
+
+    /* Alert Banners */
+    .alert { padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 8pt; }
+    .alert-critical { background: #fef2f2; border-left: 3px solid #dc2626; color: #991b1b; }
+    .alert-warning { background: #fffbeb; border-left: 3px solid #f59e0b; color: #92400e; }
+    .alert-info { background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; }
+    .alert-success { background: #f0fdf4; border-left: 3px solid #16a34a; color: #166534; }
+
+    /* Summary Box */
+    .summary-box { display: flex; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 15px; }
+    .summary-main { flex: 2; padding: 15px; background: #f9fafb; border-right: 1px solid #e5e7eb; }
+    .summary-main .label { font-size: 7pt; text-transform: uppercase; color: #6b7280; letter-spacing: 0.5px; }
+    .summary-main .amount { font-size: 22pt; font-weight: 700; color: #1e3a5f; }
+    .summary-main .period { font-size: 8pt; color: #6b7280; }
+    .summary-side { flex: 1; padding: 12px; font-size: 8pt; }
+    .summary-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #f3f4f6; }
+    .summary-row:last-child { border: none; font-weight: 600; }
+
+    /* Section Headers */
+    .section { margin-bottom: 15px; }
+    .section-title { font-size: 10pt; font-weight: 600; color: #1e3a5f; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; margin-bottom: 10px; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 10px; }
+    thead { background: #1e3a5f; color: white; }
+    th { padding: 6px 8px; text-align: left; font-weight: 600; font-size: 7pt; text-transform: uppercase; }
+    th.r { text-align: right; }
+    td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
+    td.r { text-align: right; }
+    tr:nth-child(even) { background: #f9fafb; }
+    .highlight-row { background: #fef3c7 !important; }
+
+    /* Metrics Grid */
+    .metrics { display: flex; gap: 8px; margin-bottom: 12px; }
+    .metric { flex: 1; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; padding: 10px; text-align: center; }
+    .metric .label { font-size: 7pt; text-transform: uppercase; color: #6b7280; }
+    .metric .value { font-size: 14pt; font-weight: 600; color: #1e3a5f; }
+    .metric .subtext { font-size: 7pt; color: #6b7280; }
+    .metric.good .value { color: #16a34a; }
+    .metric.warn .value { color: #f59e0b; }
+    .metric.bad .value { color: #dc2626; }
+
+    /* Premium Breakdown */
+    .premium-breakdown { display: flex; gap: 15px; margin-bottom: 15px; }
+    .breakdown-table { flex: 1; }
+    .breakdown-chart { flex: 1; }
+    .chart-container { height: 180px; }
+
+    /* Two Column */
+    .two-col { display: flex; gap: 15px; }
+    .two-col > div { flex: 1; }
+
+    /* Tags */
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 7pt; font-weight: 500; }
+    .tag-green { background: #dcfce7; color: #166534; }
+    .tag-yellow { background: #fef3c7; color: #92400e; }
+    .tag-red { background: #fee2e2; color: #991b1b; }
+    .tag-blue { background: #dbeafe; color: #1e40af; }
+
+    /* Footer */
+    .footer { margin-top: 15px; padding-top: 10px; border-top: 1px solid #e5e7eb; font-size: 7pt; color: #6b7280; }
+    .footer-main { display: flex; justify-content: space-between; }
+
+    /* Product Colors */
+    .product-auto .section-title { border-bottom-color: #3b82f6; }
+    .product-home .section-title { border-bottom-color: #16a34a; }
+    .product-life .section-title { border-bottom-color: #8b5cf6; }
+
+    /* Utilities */
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .text-sm { font-size: 7pt; }
+    .text-muted { color: #6b7280; }
+    .text-success { color: #16a34a; }
+    .text-danger { color: #dc2626; }
+    .font-bold { font-weight: 600; }
+    .mb-2 { margin-bottom: 8px; }
+</style>
+
+<div class="page product-{{lowercase Policy.LineOfBusiness}}">
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <div class="logo">Shield<span>Trust</span> Insurance</div>
+            <div class="text-sm text-muted">Policy Statement as of {{StatementDate}}</div>
+        </div>
+        <div class="header-right">
+            <div class="policy-num">{{Policy.Number}}</div>
+            <div>{{Insured.Name}}</div>
+            <div>{{Location.City}}, {{Location.State}} {{Location.Zip}}</div>
+        </div>
+    </div>
+
+    <!-- Payment Alert -->
+    {{#if Payment.PastDue}}
+    <div class="alert alert-critical">
+        <strong>Payment Past Due:</strong> ${{formatNumber Payment.AmountDue 2}} was due {{Payment.DaysPastDue}} days ago.
+        Immediate payment required to avoid policy cancellation.
+    </div>
+    {{/if}}
+
+    <!-- Coverage Warnings -->
+    {{#if RiskAnalysis.CoinsuranceWarning}}
+    <div class="alert alert-warning">
+        <strong>Coverage Alert:</strong> {{RiskAnalysis.CoinsuranceWarning}}
+    </div>
+    {{/if}}
+
+    {{#if CoverageAnalysis.Gap}}
+    {{#if (gt CoverageAnalysis.Gap 0)}}
+    <div class="alert alert-info">
+        <strong>Coverage Gap:</strong> Current life insurance may be ${{formatNumber CoverageAnalysis.Gap 0}} below recommended level based on income and debt analysis.
+    </div>
+    {{/if}}
+    {{/if}}
+
+    <!-- Summary Box -->
+    <div class="summary-box">
+        <div class="summary-main">
+            <div class="label">{{Policy.LineOfBusiness}} Insurance — Annual Premium</div>
+            <div class="amount">${{formatNumber Premium.Annual 2}}</div>
+            <div class="period">
+                {{Policy.EffectiveDate}} to {{Policy.ExpirationDate}}
+                {{#if Payment.AutoPay}}<span class="tag tag-green">AutoPay Active</span>{{/if}}
+            </div>
+        </div>
+        <div class="summary-side">
+            <div class="summary-row"><span>Monthly</span><span>${{formatNumber Premium.Monthly 2}}</span></div>
+            {{#if Premium.SixMonth}}<div class="summary-row"><span>6-Month</span><span>${{formatNumber Premium.SixMonth 2}}</span></div>{{/if}}
+            <div class="summary-row"><span>Next Due</span><span>{{Payment.NextDueDate}}</span></div>
+            <div class="summary-row"><span>Amount Due</span><span>${{formatNumber Payment.AmountDue 2}}</span></div>
+        </div>
+    </div>
+
+    <!-- Risk & Status Metrics -->
+    <div class="metrics">
+        <div class="metric {{#if (gt RiskScore 70)}}bad{{else if (gt RiskScore 40)}}warn{{else}}good{{/if}}">
+            <div class="label">Risk Score</div>
+            <div class="value">{{RiskScore}}</div>
+            <div class="subtext">{{#if (gt RiskScore 70)}}High{{else if (gt RiskScore 40)}}Moderate{{else}}Low{{/if}}</div>
+        </div>
+        <div class="metric {{#if (eq Claims.TotalCount 0)}}good{{else}}warn{{/if}}">
+            <div class="label">Claims</div>
+            <div class="value">{{Claims.TotalCount}}</div>
+            <div class="subtext">{{Claims.ClaimFreeYears}} years claim-free</div>
+        </div>
+        <div class="metric">
+            <div class="label">Customer Since</div>
+            <div class="value">{{Insured.YearsAsCustomer}}</div>
+            <div class="subtext">Years</div>
+        </div>
+        <div class="metric {{#if (eq Insured.Tier 'Elite')}}good{{/if}}">
+            <div class="label">Tier</div>
+            <div class="value">{{Insured.Tier}}</div>
+            <div class="subtext">Status</div>
+        </div>
+    </div>
+
+    <!-- AUTO: Vehicles & Drivers -->
+    {{#if Vehicles}}
+    <div class="section">
+        <div class="section-title">Covered Vehicles</div>
+        <table>
+            <thead><tr><th>Vehicle</th><th>VIN</th><th>Use</th><th class="r">Annual Miles</th><th class="r">Symbol</th></tr></thead>
+            <tbody>
+            {{#each Vehicles.Vehicle}}
+            <tr>
+                <td><strong>{{Year}} {{Make}} {{Model}}</strong></td>
+                <td class="text-muted">{{VIN}}</td>
+                <td>{{Use}}</td>
+                <td class="r">{{formatNumber AnnualMiles 0}}</td>
+                <td class="r">{{Symbol}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Covered Drivers</div>
+        <table>
+            <thead><tr><th>Driver</th><th>Relationship</th><th class="r">Age</th><th class="r">Violations</th><th class="r">At-Fault</th><th>Status</th></tr></thead>
+            <tbody>
+            {{#each Drivers.Driver}}
+            <tr>
+                <td><strong>{{Name}}</strong></td>
+                <td>{{Relationship}}</td>
+                <td class="r">{{Age}}</td>
+                <td class="r">{{Violations}}</td>
+                <td class="r">{{AtFaultAccidents}}</td>
+                <td>
+                    {{#if GoodStudent}}<span class="tag tag-green">Good Student</span>{{/if}}
+                    {{#if DefensiveDriving}}<span class="tag tag-blue">Defensive Driving</span>{{/if}}
+                    {{#if (and (eq Violations 0) (eq AtFaultAccidents 0))}}<span class="tag tag-green">Clean Record</span>{{/if}}
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{/if}}
+
+    <!-- HOME: Dwelling Details -->
+    {{#if Dwelling}}
+    <div class="two-col">
+        <div class="section">
+            <div class="section-title">Property Details</div>
+            <table>
+                <tr><td>Address</td><td class="r"><strong>{{Dwelling.Address}}</strong></td></tr>
+                <tr><td>Year Built</td><td class="r">{{Dwelling.YearBuilt}}</td></tr>
+                <tr><td>Square Feet</td><td class="r">{{formatNumber Dwelling.SquareFeet 0}}</td></tr>
+                <tr><td>Construction</td><td class="r">{{Dwelling.Construction}}</td></tr>
+                <tr><td>Roof Type / Age</td><td class="r">{{Dwelling.RoofType}} ({{Dwelling.RoofAge}} yrs)</td></tr>
+                <tr><td>Protection Class</td><td class="r">{{Dwelling.ProtectionClass}}</td></tr>
+            </table>
+        </div>
+        <div class="section">
+            <div class="section-title">Coverage Adequacy</div>
+            <table>
+                <tr><td>Replacement Cost Est.</td><td class="r">${{formatNumber RiskAnalysis.ReplacementCostEstimate 0}}</td></tr>
+                <tr><td>Current Dwelling Limit</td><td class="r">${{formatNumber RiskAnalysis.CurrentDwellingLimit 0}}</td></tr>
+                <tr class="{{#unless RiskAnalysis.CoinsuranceCompliant}}highlight-row{{/unless}}">
+                    <td>Coverage Ratio</td>
+                    <td class="r">
+                        {{RiskAnalysis.CoverageRatio}}%
+                        {{#if RiskAnalysis.CoinsuranceCompliant}}<span class="tag tag-green">OK</span>{{else}}<span class="tag tag-red">Below 80%</span>{{/if}}
+                    </td>
+                </tr>
+                <tr><td>Roof Condition</td>
+                    <td class="r">
+                        {{#ifEq RiskAnalysis.RoofCondition "Good"}}<span class="tag tag-green">{{RiskAnalysis.RoofCondition}}</span>{{/ifEq}}
+                        {{#ifEq RiskAnalysis.RoofCondition "Monitor"}}<span class="tag tag-yellow">{{RiskAnalysis.RoofCondition}}</span>{{/ifEq}}
+                        {{#ifEq RiskAnalysis.RoofCondition "Consider Replacement"}}<span class="tag tag-red">{{RiskAnalysis.RoofCondition}}</span>{{/ifEq}}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    {{/if}}
+
+    <!-- LIFE: Insured & Beneficiaries -->
+    {{#if LifeInsured}}
+    <div class="two-col">
+        <div class="section">
+            <div class="section-title">Life Insured</div>
+            <table>
+                <tr><td>Name</td><td class="r"><strong>{{LifeInsured.Name}}</strong></td></tr>
+                <tr><td>Date of Birth</td><td class="r">{{LifeInsured.DateOfBirth}} (Age {{LifeInsured.Age}})</td></tr>
+                <tr><td>Health Class</td><td class="r"><span class="tag tag-blue">{{LifeInsured.HealthClass}}</span></td></tr>
+                <tr><td>Smoker</td><td class="r">{{#if LifeInsured.Smoker}}Yes{{else}}No{{/if}}</td></tr>
+                <tr><td>Occupation</td><td class="r">{{LifeInsured.Occupation}}</td></tr>
+            </table>
+        </div>
+        <div class="section">
+            <div class="section-title">Beneficiaries</div>
+            <table>
+                <thead><tr><th>Type</th><th>Name</th><th>Relationship</th><th class="r">%</th></tr></thead>
+                <tbody>
+                <tr><td>Primary</td><td><strong>{{Beneficiaries.Primary.Name}}</strong></td><td>{{Beneficiaries.Primary.Relationship}}</td><td class="r">{{Beneficiaries.Primary.Percentage}}%</td></tr>
+                {{#if Beneficiaries.Contingent}}
+                <tr><td>Contingent</td><td>{{Beneficiaries.Contingent.Name}}</td><td>{{Beneficiaries.Contingent.Relationship}}</td><td class="r">{{Beneficiaries.Contingent.Percentage}}%</td></tr>
+                {{/if}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Coverage Analysis</div>
+        <div class="metrics">
+            <div class="metric">
+                <div class="label">Face Amount</div>
+                <div class="value">${{formatNumber Coverage.FaceAmount 0}}</div>
+            </div>
+            <div class="metric">
+                <div class="label">Income Need</div>
+                <div class="value">${{formatNumber CoverageAnalysis.IncomeReplacementNeed 0}}</div>
+                <div class="subtext">10× income</div>
+            </div>
+            <div class="metric">
+                <div class="label">Debt Payoff</div>
+                <div class="value">${{formatNumber CoverageAnalysis.DebtPayoffNeed 0}}</div>
+            </div>
+            <div class="metric {{#if CoverageAnalysis.Adequate}}good{{else}}warn{{/if}}">
+                <div class="label">Gap</div>
+                <div class="value">{{#if CoverageAnalysis.Adequate}}$0{{else}}${{formatNumber CoverageAnalysis.Gap 0}}{{/if}}</div>
+                <div class="subtext">{{#if CoverageAnalysis.Adequate}}Adequate{{else}}Shortfall{{/if}}</div>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+
+    <!-- Coverages Table (All Products) -->
+    <div class="section">
+        <div class="section-title">Coverage Summary</div>
+        <table>
+            <thead><tr><th>Coverage</th><th class="r">Limit</th><th class="r">Deductible</th><th class="r">Premium</th></tr></thead>
+            <tbody>
+            {{#each Coverages.Coverage}}
+            <tr>
+                <td><strong>{{Name}}</strong> <span class="text-muted">({{Code}})</span></td>
+                <td class="r">{{#if Limit}}{{Limit}}{{else}}—{{/if}}</td>
+                <td class="r">{{#if Deductible}}${{formatNumber Deductible 0}}{{else}}—{{/if}}</td>
+                <td class="r">${{formatNumber Premium 2}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Premium Breakdown -->
+    <div class="section">
+        <div class="section-title">Premium Breakdown</div>
+        <div class="premium-breakdown">
+            <div class="breakdown-table">
+                <table>
+                    <tr><td>Base Premium</td><td class="r">${{formatNumber Premium.Base 2}}</td></tr>
+                    {{#if Premium.TerritoryAdjustment}}<tr><td>Territory Adjustment ({{Premium.TerritoryFactor}}×)</td><td class="r {{#if (gt Premium.TerritoryAdjustment 0)}}text-danger{{else}}text-success{{/if}}">${{formatNumber Premium.TerritoryAdjustment 2}}</td></tr>{{/if}}
+                    {{#if Premium.YoungDriverSurcharge}}<tr><td>Young Driver Surcharge</td><td class="r text-danger">${{formatNumber Premium.YoungDriverSurcharge 2}}</td></tr>{{/if}}
+                    {{#if Premium.ViolationSurcharge}}<tr><td>Violation/Accident Surcharge</td><td class="r text-danger">${{formatNumber Premium.ViolationSurcharge 2}}</td></tr>{{/if}}
+                    {{#if Premium.RoofAgePenalty}}<tr><td>Roof Age Penalty</td><td class="r text-danger">${{formatNumber Premium.RoofAgePenalty 2}}</td></tr>{{/if}}
+                    {{#if Premium.ProtectionClassCredit}}<tr><td>Protection Class Credit</td><td class="r text-success">${{formatNumber Premium.ProtectionClassCredit 2}}</td></tr>{{/if}}
+                    {{#if Premium.MultiVehicleDiscount}}<tr><td>Multi-Vehicle Discount</td><td class="r text-success">${{formatNumber Premium.MultiVehicleDiscount 2}}</td></tr>{{/if}}
+                    {{#if Premium.GoodDriverDiscount}}<tr><td>Good Driver Discount</td><td class="r text-success">${{formatNumber Premium.GoodDriverDiscount 2}}</td></tr>{{/if}}
+                    {{#if Premium.ClaimFreeDiscount}}<tr><td>Claim-Free Discount</td><td class="r text-success">${{formatNumber Premium.ClaimFreeDiscount 2}}</td></tr>{{/if}}
+                    {{#if Premium.MultiPolicyDiscount}}<tr><td>Multi-Policy Discount</td><td class="r text-success">${{formatNumber Premium.MultiPolicyDiscount 2}}</td></tr>{{/if}}
+                    {{#if Premium.NewHomeDiscount}}<tr><td>New Home Discount</td><td class="r text-success">${{formatNumber Premium.NewHomeDiscount 2}}</td></tr>{{/if}}
+                    {{#if Premium.PaidInFullDiscount}}<tr><td>Paid-in-Full Discount</td><td class="r text-success">${{formatNumber Premium.PaidInFullDiscount 2}}</td></tr>{{/if}}
+                    <tr class="font-bold" style="border-top: 2px solid #1e3a5f;"><td>Annual Premium</td><td class="r">${{formatNumber Premium.Annual 2}}</td></tr>
+                </table>
+            </div>
+            <div class="breakdown-chart">
+                <div class="chart-container"><canvas id="premiumChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Claims History -->
+    {{#if Claims.Claim}}
+    <div class="section">
+        <div class="section-title">Claims History</div>
+        <table>
+            <thead><tr><th>Claim #</th><th>Date</th><th>Type</th><th>Status</th><th class="r">Paid</th><th class="r">Deductible</th></tr></thead>
+            <tbody>
+            {{#each Claims.Claim}}
+            <tr>
+                <td><strong>{{Number}}</strong></td>
+                <td>{{Date}}</td>
+                <td>{{Type}}</td>
+                <td><span class="tag {{#ifEq Status 'Closed'}}tag-green{{else}}tag-yellow{{/ifEq}}">{{Status}}</span></td>
+                <td class="r">${{formatNumber PaidAmount 2}}</td>
+                <td class="r">{{#if Deductible}}${{formatNumber Deductible 2}}{{else}}—{{/if}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    <div class="alert alert-success">
+        <strong>Clean Claims Record:</strong> No claims in the past {{Claims.ClaimFreeYears}} years. 
+        {{#if Claims.ClaimFreeDiscount}}You're saving ${{formatNumber Claims.ClaimFreeDiscount 2}}/year!{{/if}}
+    </div>
+    {{/if}}
+
+    <!-- Recommendations -->
+    {{#if Recommendations.Item}}
+    <div class="section">
+        <div class="section-title">Recommendations</div>
+        {{#each Recommendations.Item}}
+        <div class="alert {{#ifEq Priority 'High'}}alert-warning{{else}}{{#ifEq Priority 'Medium'}}alert-info{{else}}alert-success{{/ifEq}}{{/ifEq}}">
+            <strong>{{Title}}</strong><br>
+            {{Description}}
+            {{#if EstimatedCost}}<span class="text-muted"> — Est. ${{EstimatedCost}}/year</span>{{/if}}
+            {{#if EstimatedSavings}}<span class="text-success"> — Save up to ${{EstimatedSavings}}/year</span>{{/if}}
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-main">
+            <div>
+                <strong>ShieldTrust Insurance Company</strong><br>
+                PO Box 12345, Hartford, CT 06101 | 1-800-555-TRUST | www.shieldtrust.com
+            </div>
+            <div class="text-right">
+                Policy: {{Policy.Number}}<br>
+                Generated: {{StatementDate}}
+            </div>
+        </div>
+        <div class="text-muted" style="margin-top: 8px; font-size: 6.5pt;">
+            This statement is for informational purposes only. Please refer to your policy documents for complete coverage details, terms, and conditions.
+            Coverage is subject to policy terms, conditions, and exclusions. Premium amounts shown may not include all applicable fees and surcharges.
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Premium allocation chart
+    var coverages = {{{json Coverages.Coverage}}};
+    if (coverages && coverages.length && document.getElementById('premiumChart')) {
+        var labels = coverages.map(c => c.Code);
+        var data = coverages.map(c => c.Premium);
+        new Chart(document.getElementById('premiumChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: ['#1e3a5f', '#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe', '#6b7280', '#9ca3af', '#d1d5db'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { boxWidth: 12, font: { size: 9 } } }
+                }
+            }
+        });
+    }
+</script>

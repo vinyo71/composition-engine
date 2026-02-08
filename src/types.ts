@@ -21,6 +21,7 @@ export type CompositionOptions = {
     totalRecords?: number; // expected record count for progress bar in streaming mode
     jsonOutput?: boolean; // output results as JSON (for scripting/automation)
     verbose?: boolean; // show additional details (cache stats, concurrency, etc.)
+    dryRun?: boolean; // validate template and data without generating PDFs
 };
 
 export type LogLevel = "quiet" | "info" | "debug" | "warn";
